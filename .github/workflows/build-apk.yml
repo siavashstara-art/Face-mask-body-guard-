@@ -25,13 +25,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Ensure gradlew exists and is executable
+      - name: Ensure Gradle and gradlew are ready
         run: |
           if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found, generating wrapper..."
-            gradle wrapper
+            echo "gradlew not found in git repository, generating wrapper..."
+            gradle wrapper || true
           fi
-          chmod +x ./gradlew
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+          fi
 
       - name: Setup Keystore if Secrets Present
         run: |
@@ -43,11 +45,20 @@ jobs:
           fi
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --stacktrace
+          else
+            gradle assembleDebug --stacktrace
+          fi
 
       - name: Build Release Bundle & APK
         run: |
-          ./gradlew bundleRelease assembleRelease --stacktrace || echo "Release build requires keystore configuration"
+          if [ -f "./gradlew" ]; then
+            ./gradlew bundleRelease assembleRelease --stacktrace || echo "Release build requires keystore configuration"
+          else
+            gradle bundleRelease assembleRelease --stacktrace || echo "Release build requires keystore configuration"
+          fi
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
