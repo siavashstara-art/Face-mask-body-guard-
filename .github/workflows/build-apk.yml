@@ -28,20 +28,27 @@ jobs:
       - name: Ensure Gradle and gradlew are ready
         run: |
           if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found in git repository, generating wrapper..."
+            echo "gradlew not found, generating wrapper..."
             gradle wrapper || true
           fi
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
           fi
 
-      - name: Setup Keystore if Secrets Present
+      - name: Setup Release Keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Using custom keystore from GitHub Secrets..."
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-upload-key.jks
             echo "KEYSTORE_PATH=$(pwd)/my-upload-key.jks" >> $GITHUB_ENV
             echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> $GITHUB_ENV
             echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          else
+            echo "Generating release signing keystore on runner..."
+            keytool -genkey -v -keystore my-upload-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload -dname "CN=FaceGuard, OU=Mobile, O=FaceGuard, L=City, S=State, C=US" -storepass android -keypass android
+            echo "KEYSTORE_PATH=$(pwd)/my-upload-key.jks" >> $GITHUB_ENV
+            echo "STORE_PASSWORD=android" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=android" >> $GITHUB_ENV
           fi
 
       - name: Build Debug APK
@@ -52,19 +59,21 @@ jobs:
             gradle assembleDebug --stacktrace
           fi
 
-      - name: Build Release Bundle & APK
+      - name: Build Release Bundle (AAB) & Release APK
         run: |
           if [ -f "./gradlew" ]; then
-            ./gradlew bundleRelease assembleRelease --stacktrace || echo "Release build requires keystore configuration"
+            ./gradlew bundleRelease assembleRelease --stacktrace
           else
-            gradle bundleRelease assembleRelease --stacktrace || echo "Release build requires keystore configuration"
+            gradle bundleRelease assembleRelease --stacktrace
           fi
 
       - name: Upload Debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: FaceGuard-Studio-Debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: ignore
 
       - name: Upload Release Bundle (AAB)
         if: always()
