@@ -22,8 +22,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew || true
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensure gradlew exists and is executable
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            echo "gradlew not found, generating wrapper..."
+            gradle wrapper
+          fi
+          chmod +x ./gradlew
 
       - name: Setup Keystore if Secrets Present
         run: |
