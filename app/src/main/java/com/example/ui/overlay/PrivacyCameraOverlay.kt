@@ -1,17 +1,18 @@
 package com.example.ui.overlay
 
 import android.graphics.RectF
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,17 +25,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.BackgroundConfig
@@ -43,16 +40,19 @@ import com.example.model.BlurType
 import com.example.model.BundledEnvironments
 import com.example.model.FaceStyleConfig
 import com.example.model.FilterPreset
-import com.example.model.ManualPrivacyZone
 import com.example.model.PrivacyConfig
 import com.example.model.PrivacyMaskType
 import com.example.model.TrackedFace
-import com.example.ui.theme.CyberSurface
-import com.example.ui.theme.CyberTeal
-import com.example.ui.theme.MaskCensorBlack
-import com.example.ui.theme.MaskNeonTeal
-import com.example.ui.theme.SecurityGreen
-import com.example.ui.theme.WarningAmber
+import com.example.ui.theme.CharcoalPrimary
+import com.example.ui.theme.CharcoalSecondary
+import com.example.ui.theme.MaskCensorCharcoal
+import com.example.ui.theme.MaskCensorTerracotta
+import com.example.ui.theme.MutedAmber
+import com.example.ui.theme.SageGreen
+import com.example.ui.theme.TerracottaAccent
+import com.example.ui.theme.WarmBackground
+import com.example.ui.theme.WarmBorder
+import com.example.ui.theme.WarmSurface
 import kotlin.math.roundToInt
 
 @Composable
@@ -91,8 +91,7 @@ fun PrivacyCameraOverlay(
                 canvasW = canvasW,
                 canvasH = canvasH,
                 bgConfig = backgroundConfig,
-                bgBitmap = virtualBgBitmap,
-                faces = trackedFaces
+                bgBitmap = virtualBgBitmap
             )
 
             // 2. Render Color Grading / Face Style filter overlay
@@ -109,7 +108,6 @@ fun PrivacyCameraOverlay(
 
             for (face in facesToRender) {
                 // Apply dynamic safety margin expansion:
-                // If confidence falls below 0.85, expand mask by safety margin
                 val margin = if (face.confidence < 0.85f) {
                     privacyConfig.safetyMarginMultiplier * 1.25f
                 } else {
@@ -169,16 +167,16 @@ fun PrivacyCameraOverlay(
                     intensity = 0.9f
                 )
                 drawRoundRect(
-                    color = CyberTeal.copy(alpha = 0.6f),
+                    color = TerracottaAccent.copy(alpha = 0.8f),
                     topLeft = Offset(zLeft, zTop),
                     size = Size(zW, zH),
-                    cornerRadius = CornerRadius(8f, 8f),
-                    style = Stroke(width = 2f)
+                    cornerRadius = CornerRadius(6f, 6f),
+                    style = Stroke(width = 1.5f)
                 )
             }
         }
 
-        // 5. "Digitally Altered" / "ویرایش دیجیتال شده" Compliance Badge
+        // 5. Clean, Professional Alteration Transparency Badge (Warm, restrained, NOT neon)
         if (faceStyleConfig.showAlterationBadge &&
             (faceStyleConfig.preset != FilterPreset.NATURAL ||
              privacyConfig.maskType != PrivacyMaskType.NONE ||
@@ -189,17 +187,25 @@ fun PrivacyCameraOverlay(
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 100.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(CyberSurface.copy(alpha = 0.85f))
-                    .border(1.dp, CyberTeal.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .background(WarmSurface.copy(alpha = 0.92f))
+                    .border(1.dp, WarmBorder, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
-                Text(
-                    text = if (isPersian) "✦ ویرایش دیجیتال • حفاظت حریم خصوصی" else "✦ DIGITALLY ALTERED • PRIVACY SECURED",
-                    color = CyberTeal,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(TerracottaAccent)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = if (isPersian) "تغییر دیجیتالی اعمال شده" else "Digitally Altered",
+                        color = CharcoalPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
@@ -211,19 +217,17 @@ private fun DrawScope.renderBackgroundLayer(
     canvasW: Float,
     canvasH: Float,
     bgConfig: BackgroundConfig,
-    bgBitmap: ImageBitmap?,
-    faces: List<TrackedFace>
+    bgBitmap: ImageBitmap?
 ) {
     when (bgConfig.mode) {
         BackgroundMode.ORIGINAL -> {
             // Nothing to draw over camera stream
         }
         BackgroundMode.SOLID_COLOR -> {
-            // Draw a solid studio backdrop vignette
             drawRect(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color(bgConfig.solidColor).copy(alpha = 0.75f),
+                        Color(bgConfig.solidColor).copy(alpha = 0.80f),
                         Color(bgConfig.solidColor).copy(alpha = 0.95f)
                     ),
                     center = Offset(canvasW / 2f, canvasH / 2f),
@@ -232,7 +236,6 @@ private fun DrawScope.renderBackgroundLayer(
             )
         }
         BackgroundMode.CHROMA_KEY, BackgroundMode.VIRTUAL_IMAGE -> {
-            // Draw virtual environment backdrop with subtle blend
             if (bgBitmap != null) {
                 val alpha = if (bgConfig.mode == BackgroundMode.CHROMA_KEY) 0.88f else 0.82f
                 drawImage(
@@ -243,12 +246,11 @@ private fun DrawScope.renderBackgroundLayer(
             }
         }
         BackgroundMode.BLUR -> {
-            // Draw soft portrait background depth blur mask
             drawRect(
                 brush = Brush.radialGradient(
                     colors = listOf(
                         Color.Transparent,
-                        Color(0xFF0F172A).copy(alpha = 0.65f)
+                        CharcoalPrimary.copy(alpha = 0.55f)
                     ),
                     center = Offset(canvasW / 2f, canvasH * 0.45f),
                     radius = canvasW * 0.75f
@@ -264,32 +266,30 @@ private fun DrawScope.renderStyleFilter(
     styleConfig: FaceStyleConfig
 ) {
     when (styleConfig.preset) {
-        FilterPreset.NATURAL -> {
-            // No filter overlay
-        }
+        FilterPreset.NATURAL -> {}
         FilterPreset.SMOOTH_WARM -> {
             drawRect(
-                color = Color(0xFFFFB300).copy(alpha = 0.08f * (1f + styleConfig.warmth))
+                color = Color(0xFFF0A060).copy(alpha = 0.08f * (1f + styleConfig.warmth))
             )
         }
         FilterPreset.COOL_CYBER -> {
             drawRect(
                 brush = Brush.verticalGradient(
                     listOf(
-                        Color(0xFF00E5FF).copy(alpha = 0.12f),
-                        Color(0xFF8B5CF6).copy(alpha = 0.10f)
+                        Color(0xFF5A7B8C).copy(alpha = 0.12f),
+                        Color(0xFF4A5F6E).copy(alpha = 0.10f)
                     )
                 )
             )
         }
         FilterPreset.NOIR_BW -> {
             drawRect(
-                color = Color(0xFF1E293B).copy(alpha = 0.45f)
+                color = CharcoalPrimary.copy(alpha = 0.40f)
             )
         }
         FilterPreset.VINTAGE_SEPIA -> {
             drawRect(
-                color = Color(0xFF704214).copy(alpha = 0.18f)
+                color = Color(0xFF8B6B48).copy(alpha = 0.16f)
             )
         }
         FilterPreset.VIVID_CONTRAST -> {
@@ -297,7 +297,7 @@ private fun DrawScope.renderStyleFilter(
                 brush = Brush.radialGradient(
                     listOf(
                         Color.Transparent,
-                        Color.Black.copy(alpha = 0.25f)
+                        CharcoalPrimary.copy(alpha = 0.20f)
                     )
                 )
             )
@@ -306,8 +306,8 @@ private fun DrawScope.renderStyleFilter(
             drawRect(
                 brush = Brush.linearGradient(
                     listOf(
-                        Color(0xFF00F2FE).copy(alpha = 0.08f),
-                        Color(0xFFFF007F).copy(alpha = 0.08f)
+                        TerracottaAccent.copy(alpha = 0.08f),
+                        SageGreen.copy(alpha = 0.08f)
                     )
                 )
             )
@@ -324,9 +324,9 @@ private fun DrawScope.drawPixelatedFace(
     var y = rect.top
     var rowIndex = 0
 
-    val primaryShade = Color(0xFF1E293B)
-    val secondaryShade = Color(0xFF0F172A)
-    val accentShade = CyberTeal.copy(alpha = 0.25f)
+    val primaryShade = Color(0xFF282522)
+    val secondaryShade = Color(0xFF383430)
+    val tertiaryShade = Color(0xFF46413C)
 
     while (y < rect.bottom) {
         var x = rect.left
@@ -336,9 +336,9 @@ private fun DrawScope.drawPixelatedFace(
         while (x < rect.right) {
             val blockW = (block).coerceAtMost(rect.right - x)
             val fill = when ((rowIndex + colIndex) % 3) {
-                0 -> primaryShade.copy(alpha = 0.92f * intensity)
-                1 -> secondaryShade.copy(alpha = 0.95f * intensity)
-                else -> accentShade.copy(alpha = 0.85f * intensity)
+                0 -> primaryShade.copy(alpha = 0.94f * intensity)
+                1 -> secondaryShade.copy(alpha = 0.92f * intensity)
+                else -> tertiaryShade.copy(alpha = 0.88f * intensity)
             }
 
             drawRoundRect(
@@ -354,13 +354,13 @@ private fun DrawScope.drawPixelatedFace(
         rowIndex++
     }
 
-    // Border around pixelated face
+    // Clean, subtle boundary around pixelated face
     drawRoundRect(
-        color = CyberTeal.copy(alpha = 0.7f),
+        color = WarmBorder.copy(alpha = 0.8f),
         topLeft = Offset(rect.left, rect.top),
         size = Size(rect.width(), rect.height()),
-        cornerRadius = CornerRadius(12f, 12f),
-        style = Stroke(width = 2.5f)
+        cornerRadius = CornerRadius(8f, 8f),
+        style = Stroke(width = 1.5f)
     )
 }
 
@@ -373,12 +373,11 @@ private fun DrawScope.drawGaussianBlurredFace(
     val rx = rect.width() / 2f
     val ry = rect.height() / 2f
 
-    // Multi-layer frosted radial gradient to simulate fast Gaussian blur with zero GPU lag
     val frostedBrush = Brush.radialGradient(
         colors = listOf(
-            Color(0xFF0F172A).copy(alpha = 0.96f * intensity),
-            Color(0xFF1E293B).copy(alpha = 0.85f * intensity),
-            Color(0xFF334155).copy(alpha = 0.50f * intensity),
+            CharcoalPrimary.copy(alpha = 0.95f * intensity),
+            Color(0xFF383430).copy(alpha = 0.82f * intensity),
+            Color(0xFF5A544D).copy(alpha = 0.45f * intensity),
             Color.Transparent
         ),
         center = Offset(cx, cy),
@@ -391,12 +390,11 @@ private fun DrawScope.drawGaussianBlurredFace(
         size = Size(rect.width(), rect.height())
     )
 
-    // Glowing border outline
     drawOval(
-        color = SecurityGreen.copy(alpha = 0.65f),
+        color = SageGreen.copy(alpha = 0.7f),
         topLeft = Offset(rect.left, rect.top),
         size = Size(rect.width(), rect.height()),
-        style = Stroke(width = 2.5f)
+        style = Stroke(width = 1.5f)
     )
 }
 
@@ -413,7 +411,6 @@ private fun DrawScope.drawPrivacyMask(
         PrivacyMaskType.NONE -> {}
 
         PrivacyMaskType.EYES_VISOR -> {
-            // Sleek censor bar across eye line
             val eyeCenterY = rect.top + rh * eyeRatio
             val barHeight = rh * 0.22f
             val barTop = eyeCenterY - barHeight / 2f
@@ -421,57 +418,54 @@ private fun DrawScope.drawPrivacyMask(
             val barRight = rect.right + rw * 0.08f
             val barWidth = barRight - barLeft
 
-            // Pitch black censor bar
+            // Matte charcoal censor bar
             drawRoundRect(
-                color = MaskCensorBlack,
+                color = MaskCensorCharcoal,
                 topLeft = Offset(barLeft, barTop),
                 size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(6f, 6f)
+                cornerRadius = CornerRadius(4f, 4f)
             )
 
-            // Cyber accent trim line
+            // Subtle warm terracotta edge lines
             drawLine(
-                color = MaskNeonTeal,
+                color = MaskCensorTerracotta,
                 start = Offset(barLeft, barTop),
                 end = Offset(barRight, barTop),
-                strokeWidth = 2f
+                strokeWidth = 1.5f
             )
             drawLine(
-                color = MaskNeonTeal,
+                color = MaskCensorTerracotta,
                 start = Offset(barLeft, barTop + barHeight),
                 end = Offset(barRight, barTop + barHeight),
-                strokeWidth = 2f
+                strokeWidth = 1.5f
             )
         }
 
         PrivacyMaskType.MOUTH_GUARD -> {
-            // Mask covering lower face
             val mouthCenterY = rect.top + rh * mouthRatio
-            val guardHeight = rh * 0.28f
+            val guardHeight = rh * 0.26f
             val guardTop = mouthCenterY - guardHeight * 0.4f
             val guardLeft = rect.left + rw * 0.08f
             val guardWidth = rw * 0.84f
 
             drawRoundRect(
-                color = Color(0xFF0D131F),
+                color = MaskCensorCharcoal,
                 topLeft = Offset(guardLeft, guardTop),
                 size = Size(guardWidth, guardHeight),
-                cornerRadius = CornerRadius(14f, 14f)
+                cornerRadius = CornerRadius(10f, 10f)
             )
             drawRoundRect(
-                color = WarningAmber.copy(alpha = 0.8f),
+                color = WarmBorder,
                 topLeft = Offset(guardLeft, guardTop),
                 size = Size(guardWidth, guardHeight),
-                cornerRadius = CornerRadius(14f, 14f),
-                style = Stroke(width = 2f)
+                cornerRadius = CornerRadius(10f, 10f),
+                style = Stroke(width = 1.5f)
             )
         }
 
         PrivacyMaskType.FULL_SHIELD -> {
-            // Full face protective shield with biometric mesh
             val path = Path().apply {
                 val cx = rect.centerX()
-                val cy = rect.centerY()
                 moveTo(cx, rect.top)
                 lineTo(rect.right, rect.top + rh * 0.3f)
                 lineTo(rect.right - rw * 0.1f, rect.bottom - rh * 0.1f)
@@ -485,25 +479,24 @@ private fun DrawScope.drawPrivacyMask(
                 path = path,
                 brush = Brush.verticalGradient(
                     listOf(
-                        Color(0xFF0F172A).copy(alpha = 0.95f),
-                        Color(0xFF1E293B).copy(alpha = 0.92f)
+                        Color(0xFF262320).copy(alpha = 0.96f),
+                        Color(0xFF383430).copy(alpha = 0.94f)
                     )
                 )
             )
             drawPath(
                 path = path,
-                color = CyberTeal,
-                style = Stroke(width = 2.5f)
+                color = TerracottaAccent.copy(alpha = 0.8f),
+                style = Stroke(width = 1.5f)
             )
         }
 
         PrivacyMaskType.ANONYMOUS_HOOD -> {
-            // Dark silhouette cloak around face contours
             drawOval(
                 brush = Brush.radialGradient(
                     listOf(
-                        Color.Black,
-                        Color(0xFF070B14).copy(alpha = 0.98f)
+                        CharcoalPrimary,
+                        Color(0xFF262320).copy(alpha = 0.98f)
                     ),
                     center = Offset(rect.centerX(), rect.centerY()),
                     radius = rw * 0.65f
@@ -514,51 +507,49 @@ private fun DrawScope.drawPrivacyMask(
         }
 
         PrivacyMaskType.CYBER_NEON -> {
-            // High-tech geometric polygon matrix mask
+            // Clean minimal geometric matrix (non-neon)
             val cx = rect.centerX()
             val cy = rect.centerY()
             drawOval(
-                color = Color(0xFF050810).copy(alpha = 0.88f),
+                color = Color(0xFF221F1C).copy(alpha = 0.90f),
                 topLeft = Offset(rect.left, rect.top),
                 size = Size(rw, rh)
             )
-            // Cyber grid lines
             for (step in 1..4) {
                 val offsetH = rh * (step * 0.2f)
                 drawLine(
-                    color = CyberTeal.copy(alpha = 0.7f),
+                    color = TerracottaAccent.copy(alpha = 0.5f),
                     start = Offset(rect.left, rect.top + offsetH),
                     end = Offset(rect.right, rect.top + offsetH),
-                    strokeWidth = 1.5f
+                    strokeWidth = 1f
                 )
             }
             drawCircle(
-                color = MaskNeonTeal,
-                radius = 6f,
+                color = TerracottaAccent,
+                radius = 4f,
                 center = Offset(cx, cy)
             )
         }
 
         PrivacyMaskType.VENETIAN_LINES -> {
-            // Slotted horizontal privacy security bars
             val slotCount = 10
             val slotHeight = rh / slotCount
             for (i in 0 until slotCount) {
                 if (i % 2 == 0) {
                     val sTop = rect.top + i * slotHeight
                     drawRect(
-                        color = Color.Black.copy(alpha = 0.96f),
+                        color = CharcoalPrimary.copy(alpha = 0.96f),
                         topLeft = Offset(rect.left - rw * 0.05f, sTop),
                         size = Size(rw * 1.1f, slotHeight)
                     )
                 }
             }
             drawRoundRect(
-                color = CyberTeal.copy(alpha = 0.5f),
+                color = WarmBorder,
                 topLeft = Offset(rect.left, rect.top),
                 size = Size(rw, rh),
-                cornerRadius = CornerRadius(8f, 8f),
-                style = Stroke(width = 1.5f)
+                cornerRadius = CornerRadius(6f, 6f),
+                style = Stroke(width = 1f)
             )
         }
     }

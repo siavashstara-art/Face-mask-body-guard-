@@ -20,8 +20,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.camera.CameraHomeScreen
 import com.example.ui.gallery.OfflineVideoLabScreen
 import com.example.ui.permissions.CameraPermissionScreen
-import com.example.ui.theme.CyberBackground
 import com.example.ui.theme.FaceGuardTheme
+import com.example.ui.theme.WarmBackground
 import com.example.viewmodel.FaceGuardViewModel
 
 class MainActivity : ComponentActivity() {
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = CyberBackground
+                        color = WarmBackground
                     ) {
                         CameraPermissionScreen(isPersian = isPersian) {
                             AnimatedContent(

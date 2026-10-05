@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -35,12 +33,12 @@ fun PrivacyAuditDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Shield, contentDescription = null, tint = SecurityGreen)
+                Icon(Icons.Default.Shield, contentDescription = null, tint = SageGreen, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (isPersian) "ممیزی امنیتی و حریم خصوصی" else "Privacy & Hardware Audit",
-                    color = SecurityGreen,
-                    fontWeight = FontWeight.Bold,
+                    text = if (isPersian) "ممیزی امنیت و حریم خصوصی" else "Privacy & Hardware Audit",
+                    color = CharcoalPrimary,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 17.sp
                 )
             }
@@ -54,24 +52,26 @@ fun PrivacyAuditDialog(
             ) {
                 // Seal Banner
                 Surface(
-                    color = SecurityGreen.copy(alpha = 0.15f),
+                    color = SageGreenSubtle,
                     shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SecurityGreen)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SageGreen.copy(alpha = 0.3f))
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
                         Text(
                             text = if (isPersian) "تضمین ۱۰۰٪ آفلاین بودن" else "100% AIR-GAPPED & OFFLINE",
-                            color = SecurityGreen,
-                            fontWeight = FontWeight.Bold,
+                            color = SageGreen,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp
                         )
+                        Spacer(Modifier.height(4.dp))
                         Text(
                             text = if (isPersian)
-                                "این برنامه هیچ دسترسی اینترنتی (android.permission.INTERNET) در مانیفست خود ندارد. امکان ارسال حتی یک بایت داده به بیرون از نظر فنی ناممکن است."
+                                "این برنامه فاقد هرگونه مجوز اینترنت در مانیفست است. انتقال داده‌ها به سرورهای ابری از نظر فنی غیرممکن است."
                             else
-                                "This application declares ZERO internet permissions in its AndroidManifest. It is technically impossible to transmit even 1 byte off-device.",
-                            color = TextSecondary,
-                            fontSize = 11.sp
+                                "This application declares ZERO internet permissions in its AndroidManifest. It is technically impossible to transmit data off-device.",
+                            color = CharcoalSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 16.sp
                         )
                     }
                 }
@@ -95,38 +95,39 @@ fun PrivacyAuditDialog(
                 audits.forEach { (title, desc) ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.Top
                     ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = CyberTeal, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SageGreen, modifier = Modifier.size(16.dp))
                         Column {
-                            Text(title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            Text(desc, color = TextSecondary, fontSize = 10.sp)
+                            Text(title, color = CharcoalPrimary, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                            Text(desc, color = CharcoalSecondary, fontSize = 11.sp, lineHeight = 15.sp)
                         }
                     }
                 }
 
-                Divider(color = CyberCardBorder)
+                HorizontalDivider(color = WarmBorderSubtle)
 
                 // Hardware Info
                 Text(
-                    text = if (isPersian) "آمار سخت‌افزاری و حافظه:" else "Device & Memory Telemetry:",
-                    color = CyberTeal,
-                    fontWeight = FontWeight.Bold,
+                    text = if (isPersian) "مشخصات سخت‌افزار و حافظه:" else "Device & Memory Telemetry:",
+                    color = CharcoalPrimary,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 12.sp
                 )
 
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = CyberSurfaceVariant),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = CardDefaults.cardColors(containerColor = WarmSurfaceSecondary),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
                 ) {
                     Column(
                         modifier = Modifier.padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("Device: ${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})", color = TextSecondary, fontSize = 11.sp)
-                        Text("JVM Memory: ${usedMemMb}MB / ${maxMemMb}MB limit", color = TextSecondary, fontSize = 11.sp)
-                        Text("Architecture: ${Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64"}", color = TextSecondary, fontSize = 11.sp)
+                        Text("Device: ${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})", color = CharcoalSecondary, fontSize = 11.sp)
+                        Text("JVM Memory: ${usedMemMb}MB / ${maxMemMb}MB limit", color = CharcoalSecondary, fontSize = 11.sp)
+                        Text("Architecture: ${Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64"}", color = CharcoalSecondary, fontSize = 11.sp)
                     }
                 }
             }
@@ -134,11 +135,11 @@ fun PrivacyAuditDialog(
         confirmButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = SecurityGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent)
             ) {
-                Text(if (isPersian) "متوجه شدم" else "Close Audit", color = Color.Black)
+                Text(if (isPersian) "تأیید و بستن" else "Close Audit", color = Color.White)
             }
         },
-        containerColor = CyberSurface
+        containerColor = WarmSurface
     )
 }

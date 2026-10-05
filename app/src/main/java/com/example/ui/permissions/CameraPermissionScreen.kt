@@ -1,28 +1,22 @@
 package com.example.ui.permissions
 
 import android.Manifest
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.R
 import com.example.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
@@ -47,14 +41,14 @@ fun CameraPermissionScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CyberBackground)
+                .background(WarmBackground)
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = CyberSurface),
-                shape = RoundedCornerShape(24.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CyberCardBorder),
+                colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                shape = RoundedCornerShape(20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -64,47 +58,46 @@ fun CameraPermissionScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(72.dp)
-                            .background(CyberTeal.copy(alpha = 0.15f), CircleShape)
-                            .border(1.5.dp, CyberTeal, CircleShape),
+                            .size(64.dp)
+                            .background(TerracottaSubtle, CircleShape)
+                            .border(1.dp, TerracottaAccent.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.Security,
+                            Icons.Default.Shield,
                             contentDescription = null,
-                            tint = CyberTeal,
-                            modifier = Modifier.size(36.dp)
+                            tint = TerracottaAccent,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
 
                     Text(
                         text = if (isPersian) "استودیو فیس‌گارد" else "FaceGuard Studio",
-                        color = TextPrimary,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        color = CharcoalPrimary,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
                     )
 
                     Surface(
-                        color = SecurityGreen.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SecurityGreen)
+                        color = SageGreenSubtle,
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = if (isPersian) "دوربین کاملاً خصوصی و آفلاین" else "Private Offline Camera",
-                            color = SecurityGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
+                            color = SageGreen,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
 
                     Text(
                         text = if (isPersian)
-                            "برای فعال‌سازی پیش‌نمایش، ماسک‌های حریم خصوصی، تار کردن چهره و ضبط ویدیوی محلی، فیس‌گارد به مجوز دوربین و میکروفون نیاز دارد.\n\nهیچ داده‌ای هرگز به هیچ سروری ارسال نمی‌شود و اینترنت کاملاً مسدود است."
+                            "برای فعال‌سازی پیش‌نمایش تصویر، پوشش‌های حریم خصوصی، تار کردن چهره و ضبط ویدیوی محلی، فیس‌گارد نیاز به دسترسی دوربین و میکروفون دارد.\n\nتمامی پردازش‌ها به صورت ۱۰۰٪ آفلاین بر روی دستگاه شما انجام شده و هیچ داده‌ای ارسال نمی‌شود."
                         else
-                            "To enable real-time face blurring, privacy masks, virtual environments, and local MP4 recording, FaceGuard requires camera and microphone permissions.\n\nAll data is processed 100% locally on your device with zero internet connectivity.",
-                        color = TextSecondary,
+                            "To enable real-time viewfinder preview, privacy masks, face blurring, and local recording, FaceGuard requires camera and microphone permissions.\n\nAll media processing runs 100% locally on your device with zero cloud connectivity.",
+                        color = CharcoalSecondary,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 20.sp
@@ -112,16 +105,16 @@ fun CameraPermissionScreen(
 
                     Button(
                         onClick = { permissionState.launchMultiplePermissionRequest() },
-                        colors = ButtonDefaults.buttonColors(containerColor = CyberTeal),
-                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
+                            .height(48.dp)
                     ) {
                         Text(
-                            text = if (isPersian) "اعطای دسترسی و ورود به استودیو" else "Grant Permissions & Enter Studio",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
+                            text = if (isPersian) "اعطای دسترسی و ورود به برنامه" else "Grant Permissions & Enter",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 14.sp
                         )
                     }
