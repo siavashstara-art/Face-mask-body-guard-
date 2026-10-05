@@ -1,26 +1,4 @@
-org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
-	... 30 more
-
-
-BUILD FAILED in 3m 59s
-Error: Process completed with exit code 1.
-0s
-0s
-0s
-Run actions/upload-artifact@v4
-  with:
-    name: FaceGuard-Studio-Release-AAB
-    path: app/build/outputs/bundle/release/*.aab
-    if-no-files-found: ignore
-    compression-level: 6
-    overwrite: false
-    include-hidden-files: false
-  env:
-    JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
-    JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
-    GRADLE_ACTION_ID: gradle/actions/setup-gradle
-    GRADLE_USER_HOME: /home/ - name: Build Debug APK
+- name: Build Debug APK
   run: |
     if [ -f "./gradlew" ]; then
       ./gradlew assembleDebug --stacktrace
