@@ -35,10 +35,20 @@ jobs:
             chmod +x ./gradlew
           fi
 
-      - name: Setup Release Keystore
+      - name: Setup Keystores (Debug and Release)
         run: |
+          # 1. بازسازی فایل debug.keystore از روی base64 برای بیلد Debug
+          if [ -f "debug.keystore.base64" ]; then
+            echo "Restoring debug.keystore from debug.keystore.base64..."
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            echo "Generating fallback debug.keystore..."
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          # 2. آماده‌سازی کلید امضای Release برای ساخت AAB و Release APK
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "Using custom keystore from GitHub Secrets..."
+            echo "Using custom release keystore from GitHub Secrets..."
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-upload-key.jks
             echo "KEYSTORE_PATH=$(pwd)/my-upload-key.jks" >> $GITHUB_ENV
             echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> $GITHUB_ENV
@@ -72,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FaceGuard-Studio-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: ignore
 
       - name: Upload Release Bundle (AAB)
