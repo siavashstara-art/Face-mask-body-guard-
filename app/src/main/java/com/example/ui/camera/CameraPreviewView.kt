@@ -68,27 +68,32 @@ fun CameraPreviewView(
                     .build()
                     .also { analysis ->
                         analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                            // Sample every 3rd frame to conserve CPU/RAM on Redmi Note 8
-                            if (++frameCounter % 3 == 0) {
-                                val bitmap = imageProxy.toBitmap()
-                                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                                val rotatedBitmap = if (rotationDegrees != 0) {
-                                    val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
-                                    Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                                } else {
-                                    bitmap
-                                }
+                            try {
+                                // Sample every 3rd frame to conserve CPU/RAM on Redmi Note 8
+                                if (++frameCounter % 3 == 0) {
+                                    val bitmap = imageProxy.toBitmap()
+                                    val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                                    val rotatedBitmap = if (rotationDegrees != 0) {
+                                        val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+                                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                                    } else {
+                                        bitmap
+                                    }
 
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    val isFront = cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA
-                                    val detected = faceDetectionEngine.detectFacesOnBitmap(
-                                        sourceBitmap = rotatedBitmap,
-                                        isFrontCamera = isFront
-                                    )
-                                    onFacesUpdated(detected)
+                                    CoroutineScope(Dispatchers.Default).launch {
+                                        val isFront = cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA
+                                        val detected = faceDetectionEngine.detectFacesOnBitmap(
+                                            sourceBitmap = rotatedBitmap,
+                                            isFrontCamera = isFront
+                                        )
+                                        onFacesUpdated(detected)
+                                    }
                                 }
+                            } catch (_: Throwable) {
+                                // Gracefully ignore decoding glitches on legacy hardware
+                            } finally {
+                                imageProxy.close()
                             }
-                            imageProxy.close()
                         }
                     }
 

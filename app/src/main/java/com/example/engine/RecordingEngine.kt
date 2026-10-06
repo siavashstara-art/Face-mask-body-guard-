@@ -36,8 +36,9 @@ class RecordingEngine(
             PerformancePreset.HIGH -> Quality.FHD
             else -> Quality.HD // 720p optimal for Redmi Note 8
         }
+        val fallbackStrategy = androidx.camera.video.FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
         val recorder = Recorder.Builder()
-            .setQualitySelector(QualitySelector.from(quality))
+            .setQualitySelector(QualitySelector.from(quality, fallbackStrategy))
             .build()
         val capture = VideoCapture.withOutput(recorder)
         this.videoCapture = capture
