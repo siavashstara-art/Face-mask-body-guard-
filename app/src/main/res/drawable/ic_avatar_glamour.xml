@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Glamour AI Fashion Model Face -->
+    <!-- Soft Face Outline -->
+    <path
+        android:fillColor="#EFE5DB"
+        android:pathData="M74,75 C74,38 182,38 182,75 C182,135 168,212 128,232 C88,212 74,135 74,75 Z" />
+    <!-- Styled Fashion Wavy Hair -->
+    <path
+        android:fillColor="#3D2B1F"
+        android:pathData="M60,80 C50,25 95,8 128,8 C161,8 206,25 196,80 C208,105 204,165 186,180 C182,140 185,85 174,60 C154,35 102,35 82,60 C71,85 74,140 70,180 C52,165 48,105 60,80 Z" />
+    <!-- Designer Gradient Sunglasses Frame -->
+    <path
+        android:fillColor="#1F1E24"
+        android:pathData="M68,90 C88,84 116,86 122,100 C125,103 131,103 134,100 C140,86 168,84 188,90 C198,95 195,124 170,126 C148,128 135,110 128,107 C121,110 108,128 86,126 C61,124 58,95 68,90 Z" />
+    <!-- Deep Amber Lens Left -->
+    <path
+        android:fillColor="#4A3B32"
+        android:pathData="M76,95 C92,90 110,92 115,102 C112,118 92,120 82,118 C72,115 70,102 76,95 Z" />
+    <!-- Deep Amber Lens Right -->
+    <path
+        android:fillColor="#4A3B32"
+        android:pathData="M180,95 C164,90 146,92 141,102 C144,118 164,120 174,118 C184,115 186,102 180,95 Z" />
+    <!-- Warm Rose Lips -->
+    <path
+        android:fillColor="#D96B6B"
+        android:pathData="M110,180 C118,172 125,175 128,174 C131,175 138,172 146,180 C150,186 142,196 128,194 C114,196 106,186 110,180 Z" />
+</vector>

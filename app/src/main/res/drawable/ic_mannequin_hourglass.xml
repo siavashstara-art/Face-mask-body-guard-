@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="360dp"
+    android:viewportWidth="256"
+    android:viewportHeight="360">
+    <!-- Luxury Hourglass Form for Swimwear & Lingerie -->
+    <!-- Neck and Torso -->
+    <path
+        android:fillColor="#E8DDD2"
+        android:pathData="M116,20 L140,20 L142,48 L178,56 C194,62 198,78 195,95 C186,132 178,148 152,165 C146,170 144,178 144,185 C144,198 172,228 178,252 C184,276 172,310 148,318 L108,318 C84,310 72,276 78,252 C84,228 112,198 112,185 C112,178 110,170 104,165 C78,148 70,132 61,95 C58,78 62,62 78,56 L114,48 Z" />
+    <!-- Stylized Bust and Waist Contour Accent -->
+    <path
+        android:strokeColor="#C47D68"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:pathData="M92,108 C108,125 120,128 128,128 C136,128 148,125 164,108" />
+    <path
+        android:strokeColor="#C47D68"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M106,176 C116,182 124,184 128,184 C132,184 140,182 150,176" />
+    <!-- Stand Neck Cap -->
+    <path
+        android:fillColor="#2C2724"
+        android:pathData="M112,14 C112,10 144,10 144,14 L140,22 L116,22 Z" />
+</vector>

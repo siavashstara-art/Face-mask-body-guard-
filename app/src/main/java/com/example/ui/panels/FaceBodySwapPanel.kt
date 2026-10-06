@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.AiEngineExecutionMode
 import com.example.model.BundledSwapItems
 import com.example.model.SwapConfig
 import com.example.ui.theme.*
@@ -31,6 +32,7 @@ fun FaceBodySwapPanel(
     config: SwapConfig,
     isPersian: Boolean,
     onUpdate: (SwapConfig) -> Unit,
+    onActivateTripleShield: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -48,21 +50,207 @@ fun FaceBodySwapPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (isPersian) "استودیو تعویض چهره و اندام (Swap)" else "Face & Body Swap Studio",
+                text = if (isPersian) "استودیو هوش مصنوعی، چهره و اندام" else "AI Model & Swap Studio",
                 style = MaterialTheme.typography.titleMedium,
                 color = CharcoalPrimary,
                 fontWeight = FontWeight.SemiBold
             )
             Surface(
-                color = SageGreenSubtle,
+                color = if (config.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL) SageGreenSubtle else TerracottaSubtle,
                 shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
-                    text = if (isPersian) "آفلاین و بلادرنگ" else "Real-time Offline",
+                    text = if (isPersian) {
+                        if (config.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL) "پردازش آفلاین محلی" else "هوش مصنوعی آنلاین"
+                    } else {
+                        if (config.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL) "Local Edge AI" else "Cloud AI Active"
+                    },
                     style = MaterialTheme.typography.labelSmall,
-                    color = SageGreen,
+                    color = if (config.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL) SageGreen else TerracottaAccent,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
+        }
+
+        // ============================================
+        // 0. AI EXECUTION MODE (حالت آفلاین / آنلاین)
+        // ============================================
+        Card(
+            colors = CardDefaults.cardColors(containerColor = WarmSurfaceSecondary),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (isPersian) "حالت اجرای موتور هوش مصنوعی:" else "AI Engine Execution Mode:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CharcoalPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Offline Mode Chip
+                    val isOffline = config.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL
+                    Surface(
+                        color = if (isOffline) SageGreenSubtle else WarmSurface,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isOffline) SageGreen else WarmBorder
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                onUpdate(config.copy(aiExecutionMode = AiEngineExecutionMode.OFFLINE_EDGE_LOCAL))
+                            }
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.CloudOff,
+                                    contentDescription = null,
+                                    tint = if (isOffline) SageGreen else CharcoalSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = if (isPersian) "آفلاین (معمولی)" else "Offline (Normal)",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isOffline) SageGreen else CharcoalPrimary
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (isPersian) "۱۰۰٪ روی گوشی، بدون مصرف نت، سریع و امن روی ردمی نوت ۸" else "Runs on-device with zero data usage",
+                                fontSize = 10.sp,
+                                color = CharcoalSecondary,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+
+                    // Online Mode Chip
+                    val isOnline = config.aiExecutionMode == AiEngineExecutionMode.ONLINE_CLOUD_HYBRID
+                    Surface(
+                        color = if (isOnline) TerracottaSubtle else WarmSurface,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isOnline) TerracottaAccent else WarmBorder
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                onUpdate(config.copy(aiExecutionMode = AiEngineExecutionMode.ONLINE_CLOUD_HYBRID))
+                            }
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.CloudQueue,
+                                    contentDescription = null,
+                                    tint = if (isOnline) TerracottaAccent else CharcoalSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = if (isPersian) "آنلاین ابری" else "Online Cloud",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isOnline) TerracottaAccent else CharcoalPrimary
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (isPersian) "کیفیت فوتورئال و مدل‌های نامحدود با اتصال اینترنت" else "Photorealistic models via cloud sync",
+                                fontSize = 10.sp,
+                                color = CharcoalSecondary,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================
+        // 0.1 TRIPLE SHIELD SHORTCUT (فعالسازی هر ۳ باهم)
+        // ============================================
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (config.tripleShieldEnforced) TerracottaSubtle else WarmSurfaceSecondary
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (config.tripleShieldEnforced) TerracottaAccent else WarmBorder
+            )
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Icon(
+                            Icons.Default.Security,
+                            contentDescription = null,
+                            tint = TerracottaAccent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (isPersian) "سپر سه‌گانه هوشمند (All-in-One)" else "Triple Protection Shield",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = CharcoalPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (isPersian)
+                                    "ردیابی خودکار + تاری چهره + سواپ مدل همزمان"
+                                else
+                                    "Face Tracking + Blur + Face Swap simultaneously",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = CharcoalSecondary
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            val next = !config.tripleShieldEnforced
+                            onUpdate(config.copy(tripleShieldEnforced = next))
+                            if (next) onActivateTripleShield()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (config.tripleShieldEnforced) TerracottaAccent else WarmSurface,
+                            contentColor = if (config.tripleShieldEnforced) Color.White else CharcoalPrimary
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (config.tripleShieldEnforced) TerracottaAccent else WarmBorder),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = if (isPersian) (if (config.tripleShieldEnforced) "فعال است" else "فعال‌سازی ۳تایی") else (if (config.tripleShieldEnforced) "Active" else "Enable All 3"),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                Text(
+                    text = if (isPersian)
+                        "توصیه ویژه برای مدلینگ لباس زیر: ردیاب زنده سر شما را تعقیب می‌کند، لایه زیرین چهره را مات نگه می‌دارد و مدل جذاب هوش مصنوعی روی آن قرار می‌گیرد تا خانواده هرگز شما را نشناسند."
+                    else
+                        "Recommended for swimwear/underwear modeling: live tracking anchors the blur while placing aesthetic AI persona over it for zero identity leakage.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = CharcoalTertiary,
+                    lineHeight = 15.sp
                 )
             }
         }
@@ -89,7 +277,7 @@ fun FaceBodySwapPanel(
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = if (isPersian) "انطباق هوشمند مدل انتخابی روی چهره شما" else "Smart morphing onto detected facial bounds",
+                            text = if (isPersian) "انطباق مدل هوش مصنوعی انتخابی روی چهره شما" else "Smart morphing onto detected facial bounds",
                             style = MaterialTheme.typography.labelSmall,
                             color = CharcoalSecondary
                         )
@@ -106,7 +294,7 @@ fun FaceBodySwapPanel(
 
                 if (config.faceSwapEnabled) {
                     Text(
-                        text = if (isPersian) "انتخاب مدل یا پرسونای چهره:" else "Select Face Persona:",
+                        text = if (isPersian) "انتخاب مدل هوش مصنوعی (زنانه / تجاری):" else "Select AI Model Persona:",
                         style = MaterialTheme.typography.bodySmall,
                         color = CharcoalSecondary
                     )
@@ -119,7 +307,7 @@ fun FaceBodySwapPanel(
                             val isSelected = config.selectedAvatarId == avatar.id
                             Card(
                                 modifier = Modifier
-                                    .width(130.dp)
+                                    .width(140.dp)
                                     .clickable { onUpdate(config.copy(selectedAvatarId = avatar.id)) }
                                     .border(
                                         width = 1.dp,
@@ -137,7 +325,7 @@ fun FaceBodySwapPanel(
                                     Image(
                                         painter = painterResource(id = avatar.drawableResId),
                                         contentDescription = avatar.titleEn,
-                                        modifier = Modifier.size(54.dp)
+                                        modifier = Modifier.size(56.dp)
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
@@ -145,7 +333,7 @@ fun FaceBodySwapPanel(
                                         color = if (isSelected) TerracottaHover else CharcoalPrimary,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        maxLines = 2
                                     )
                                 }
                             }
@@ -194,7 +382,7 @@ fun FaceBodySwapPanel(
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = if (isPersian) "نمایش محصول روی مانکن‌های تجاری بوتیک" else "Dress product onto virtual boutique mannequin",
+                            text = if (isPersian) "نمایش لباس روی مانکن‌های تجاری ساعت شنی" else "Dress product onto virtual boutique mannequin",
                             style = MaterialTheme.typography.labelSmall,
                             color = CharcoalSecondary
                         )
@@ -211,7 +399,7 @@ fun FaceBodySwapPanel(
 
                 if (config.bodySwapEnabled) {
                     Text(
-                        text = if (isPersian) "انتخاب نوع مانکن یا اندام:" else "Select Mannequin Model:",
+                        text = if (isPersian) "انتخاب مانکن (مخصوص لباس زیر و مایو):" else "Select Mannequin Model:",
                         style = MaterialTheme.typography.bodySmall,
                         color = CharcoalSecondary
                     )
@@ -224,7 +412,7 @@ fun FaceBodySwapPanel(
                             val isSelected = config.selectedBodyId == item.id
                             Card(
                                 modifier = Modifier
-                                    .width(130.dp)
+                                    .width(135.dp)
                                     .clickable { onUpdate(config.copy(selectedBodyId = item.id)) }
                                     .border(
                                         width = 1.dp,
@@ -251,7 +439,7 @@ fun FaceBodySwapPanel(
                                         color = if (isSelected) TerracottaHover else CharcoalPrimary,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        maxLines = 2
                                     )
                                 }
                             }

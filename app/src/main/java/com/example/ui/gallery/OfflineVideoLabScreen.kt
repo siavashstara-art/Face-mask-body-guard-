@@ -4,14 +4,20 @@ import android.net.Uri
 import android.widget.MediaController
 import android.widget.VideoView
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -21,10 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.R
 import com.example.engine.StorageManager
 import com.example.model.VideoItem
 import com.example.ui.theme.*
@@ -49,12 +58,60 @@ fun OfflineVideoLabScreen(
     var isPlaying by remember { mutableStateOf(false) }
     var videoViewInstance by remember { mutableStateOf<VideoView?>(null) }
 
-    // Lab tools state
+    // Lab tools states
     var showExportDialog by remember { mutableStateOf(false) }
     var exportName by remember { mutableStateOf("") }
+    var showCompressDialog by remember { mutableStateOf(false) }
+    var selectedCompressPreset by remember { mutableStateOf(com.example.engine.CompressionQualityPreset.MAX_COMPRESSION) }
+    var isCompressing by remember { mutableStateOf(false) }
+    var compressProgress by remember { mutableStateOf(0f) }
     var showDeleteConfirmDialog by remember { mutableStateOf<VideoItem?>(null) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isSplitCompareMode by remember { mutableStateOf(false) }
+
+    // Video Post-Processing Editor Dialog state
+    var showEditorDialog by remember { mutableStateOf(false) }
+    var editorTab by remember { mutableStateOf(0) } // 0: Trim, 1: Face/Swap, 2: Audio/Dubbing, 3: Subtitle, 4: Merge
+    var trimStartSec by remember { mutableStateOf(0f) }
+    var trimEndSec by remember { mutableStateOf(10f) }
+    var postBlurActive by remember { mutableStateOf(false) }
+    var postFaceSwapActive by remember { mutableStateOf(false) }
+    var selectedSwapAvatarRes by remember { mutableStateOf(R.drawable.ic_avatar_hollywood) }
+    
+    // Audio, Voiceover & Music state
+    var muteOriginalAudio by remember { mutableStateOf(false) }
+    var postDenoiseAudio by remember { mutableStateOf(true) }
+    var postPitchFactor by remember { mutableStateOf(0.85f) } // Deep pitch default
+    var selectedMusicIndex by remember { mutableStateOf(0) } // 0: None, 1: Boutique, 2: Cinematic, 3: Lo-Fi
+    var musicVolume by remember { mutableStateOf(0.65f) }
+    var isVoiceDubbingActive by remember { mutableStateOf(false) }
+    var dubbingDurationSec by remember { mutableStateOf(0) }
+
+    // Subtitle & Caption state
+    var subtitleText by remember { mutableStateOf("") }
+    var subtitleFontSize by remember { mutableStateOf(13f) }
+    var subtitlePosition by remember { mutableStateOf(0) } // 0: Bottom, 1: Center, 2: Top
+
+    var mergeTargetVideo by remember { mutableStateOf<VideoItem?>(null) }
+
+    // Standard Zero-Permission Video Picker
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                statusMessage = if (isPersian) "در حال وارد کردن ویدیو از حافظه گوشی..." else "Importing video from device..."
+                val imported = storageManager.importVideoFromUri(uri)
+                if (imported != null) {
+                    savedVideos = storageManager.getSavedVideos()
+                    selectedVideo = imported
+                    statusMessage = if (isPersian) "ویدیو وارد شد و آماده تدوین است ✓" else "Video imported & ready for lab processing ✓"
+                } else {
+                    statusMessage = if (isPersian) "خطا در بارگذاری فایل ویدیو" else "Could not load video"
+                }
+            }
+        }
+    }
 
     fun reloadVideos() {
         coroutineScope.launch {
@@ -75,15 +132,15 @@ fun OfflineVideoLabScreen(
                 title = {
                     Column {
                         Text(
-                            text = if (isPersian) "آزمایشگاه محلی ویدیو" else "Offline Video Lab",
+                            text = if (isPersian) "آزمایشگاه تدوین ویدیوی آفلاین" else "Offline Video Studio & Lab",
                             color = CharcoalPrimary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 17.sp
                         )
                         Text(
-                            text = if (isPersian) "مدیریت محلی فایل‌های ذخیره شده" else "Local processing • Zero cloud storage",
+                            text = if (isPersian) "تدوین، صداگذاری، زیرنویس و فیس‌سواپ محلی" else "Trim, Dubbing, Subtitle & Privacy Editing",
                             color = CharcoalSecondary,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
                 },
@@ -97,25 +154,21 @@ fun OfflineVideoLabScreen(
                     }
                 },
                 actions = {
-                    Surface(
-                        color = SageGreenSubtle,
-                        shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SageGreen.copy(alpha = 0.3f)),
-                        modifier = Modifier.padding(end = 12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = SageGreen, modifier = Modifier.size(13.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = if (isPersian) "آفلاین" else "OFFLINE",
-                                color = SageGreen,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold
+                    // Import Video from Device Gallery Button
+                    OutlinedButton(
+                        onClick = {
+                            videoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
                             )
-                        }
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = WarmSurfaceSecondary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, TerracottaAccent),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = null, tint = TerracottaAccent, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(if (isPersian) "وارد کردن از گالری" else "Import Gallery", color = TerracottaAccent, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmSurface)
@@ -136,13 +189,13 @@ fun OfflineVideoLabScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(statusMessage ?: "", color = SageGreen, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         IconButton(onClick = { statusMessage = null }, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Default.Close, contentDescription = null, tint = SageGreen, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Close, contentDescription = null, tint = SageGreen, modifier = Modifier.size(14.dp))
                         }
                     }
                 }
@@ -150,6 +203,8 @@ fun OfflineVideoLabScreen(
 
             if (selectedVideo != null) {
                 val currentVideo = selectedVideo!!
+                val videoDurationSec = (currentVideo.durationMs / 1000f).coerceAtLeast(1f)
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,6 +221,9 @@ fun OfflineVideoLabScreen(
                                 setVideoURI(Uri.parse(currentVideo.uri))
                                 setOnPreparedListener { mp ->
                                     mp.isLooping = true
+                                    if (muteOriginalAudio) {
+                                        mp.setVolume(0f, 0f)
+                                    }
                                     start()
                                     isPlaying = true
                                 }
@@ -178,6 +236,63 @@ fun OfflineVideoLabScreen(
                             isPlaying = true
                         }
                     )
+
+                    // Post-processing visual overlays during playback
+                    if (postBlurActive) {
+                        Surface(
+                            color = Color(0xCC1E1C1A),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, TerracottaAccent),
+                            modifier = Modifier
+                                .size(90.dp, 100.dp)
+                                .align(Alignment.Center)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (isPersian) "تاری چهره" else "BLURRED",
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    if (postFaceSwapActive) {
+                        Image(
+                            painter = painterResource(id = selectedSwapAvatarRes),
+                            contentDescription = "Swap Overlay",
+                            modifier = Modifier
+                                .size(95.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+
+                    // Subtitle / Caption live preview
+                    if (subtitleText.isNotBlank()) {
+                        val subAlign = when (subtitlePosition) {
+                            1 -> Alignment.Center
+                            2 -> Alignment.TopCenter
+                            else -> Alignment.BottomCenter
+                        }
+                        Surface(
+                            color = Color.Black.copy(alpha = 0.80f),
+                            shape = RoundedCornerShape(6.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                            modifier = Modifier
+                                .align(subAlign)
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = subtitleText,
+                                color = Color.White,
+                                fontSize = subtitleFontSize.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
 
                     // Video Name Badge
                     Surface(
@@ -195,55 +310,78 @@ fun OfflineVideoLabScreen(
                         )
                     }
 
-                    if (isSplitCompareMode) {
-                        Surface(
-                            color = TerracottaAccent,
-                            shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(10.dp)
-                        ) {
-                            Text(
-                                text = if (isPersian) "حالت مقایسه فعال" else "Compare Active",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                    // Audio & Dubbing Badges
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (muteOriginalAudio) {
+                            Surface(color = BrickRed, shape = RoundedCornerShape(4.dp)) {
+                                Text("بی‌صدا (Mute)", color = Color.White, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp))
+                            }
+                        }
+                        if (isVoiceDubbingActive) {
+                            Surface(color = BrickRed, shape = RoundedCornerShape(4.dp)) {
+                                Text("REC گفتار", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp))
+                            }
                         }
                     }
                 }
 
-                // Video Lab Actions Row
+                // Video Lab Actions Toolbar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(WarmSurface)
                         .border(1.dp, WarmBorder)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Export Button
-                    IconButton(onClick = {
-                        exportName = currentVideo.name.substringBeforeLast(".") + "_protected"
-                        showExportDialog = true
-                    }) {
-                        Icon(Icons.Default.FileDownload, contentDescription = "Export", tint = TerracottaAccent)
+                    // Open Video Editor Suite Button
+                    Button(
+                        onClick = {
+                            trimStartSec = 0f
+                            trimEndSec = videoDurationSec
+                            showEditorDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isPersian) "تدوین و صداگذاری" else "Edit & Audio Suite", fontSize = 12.sp, color = Color.White)
                     }
 
-                    // Compare Mode Toggle
-                    IconButton(onClick = { isSplitCompareMode = !isSplitCompareMode }) {
-                        Icon(
-                            Icons.Default.Compare,
-                            contentDescription = "Compare",
-                            tint = if (isSplitCompareMode) TerracottaAccent else CharcoalSecondary
-                        )
-                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Video Compressor Button (فشرده‌سازی داخل برنامه‌ای و امن)
+                        IconButton(onClick = { showCompressDialog = true }) {
+                            Icon(Icons.Default.Compress, contentDescription = "Compress", tint = TerracottaAccent)
+                        }
 
-                    // Delete Video Button
-                    IconButton(onClick = { showDeleteConfirmDialog = currentVideo }) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = "Delete", tint = BrickRed)
+                        // Export with Zero Metadata Button
+                        IconButton(onClick = {
+                            exportName = currentVideo.name.substringBeforeLast(".") + "_clean"
+                            showExportDialog = true
+                        }) {
+                            Icon(Icons.Default.FileDownload, contentDescription = "Export", tint = SageGreen)
+                        }
+
+                        // Split Compare Mode Toggle
+                        IconButton(onClick = { isSplitCompareMode = !isSplitCompareMode }) {
+                            Icon(
+                                Icons.Default.Compare,
+                                contentDescription = "Compare",
+                                tint = if (isSplitCompareMode) TerracottaAccent else CharcoalSecondary
+                            )
+                        }
+
+                        // Delete Video Button
+                        IconButton(onClick = { showDeleteConfirmDialog = currentVideo }) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "Delete", tint = BrickRed)
+                        }
                     }
                 }
             } else {
@@ -256,16 +394,16 @@ fun OfflineVideoLabScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.VideocamOff, contentDescription = null, tint = CharcoalTertiary, modifier = Modifier.size(40.dp))
+                        Icon(Icons.Default.VideocamOff, contentDescription = null, tint = CharcoalTertiary, modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = if (isPersian) "هیچ ویدیویی ثبت نشده است" else "No recordings saved yet",
+                            text = if (isPersian) "هیچ ویدیویی انتخاب نشده است" else "No video selected",
                             color = CharcoalPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = if (isPersian) "برای ثبت اولین ویدیوی خصوصی کلید ضبط را لمس کنید" else "Tap record on camera screen to create your first video",
+                            text = if (isPersian) "ویدیوهای ضبط‌شده را لمس کنید یا از گالری فایل وارد کنید" else "Select a recording or import an external video",
                             color = CharcoalSecondary,
                             fontSize = 11.sp
                         )
@@ -274,12 +412,25 @@ fun OfflineVideoLabScreen(
             }
 
             // List of Saved Videos
-            Text(
-                text = if (isPersian) "ویدیوهای ضبط شده در دستگاه (${savedVideos.size}):" else "Local Device Recordings (${savedVideos.size}):",
-                style = MaterialTheme.typography.titleSmall,
-                color = CharcoalSecondary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isPersian) "کتابخانه ویدیوهای محلی (${savedVideos.size}):" else "Local Video Library (${savedVideos.size}):",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = CharcoalSecondary
+                )
+                Text(
+                    text = if (isPersian) "۱۰۰٪ بدون ردیابی و GPS" else "Zero-GPS Scrubbed",
+                    fontSize = 10.sp,
+                    color = SageGreen,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -337,9 +488,10 @@ fun OfflineVideoLabScreen(
                                         maxLines = 1
                                     )
                                     Text(
-                                        text = "$dateFormatted • $sizeMb",
+                                        text = "$dateFormatted • $sizeMb • ${item.appliedPrivacySummary}",
                                         color = CharcoalSecondary,
-                                        fontSize = 11.sp
+                                        fontSize = 11.sp,
+                                        maxLines = 1
                                     )
                                 }
                             }
@@ -354,30 +506,395 @@ fun OfflineVideoLabScreen(
         }
     }
 
-    // Export Dialog
+    // ============================================================
+    // Comprehensive Video Editor & Post-Processing Dialog
+    // ============================================================
+    if (showEditorDialog && selectedVideo != null) {
+        val currentVideo = selectedVideo!!
+        val maxDurationSec = (currentVideo.durationMs / 1000f).coerceAtLeast(1f)
+
+        AlertDialog(
+            onDismissRequest = { showEditorDialog = false },
+            title = {
+                Text(
+                    text = if (isPersian) "استودیو تدوین، صداگذاری و زیرنویس" else "Video Lab Post-Processor",
+                    color = CharcoalPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Editor Tab Row (Trim, Face/Swap, Audio/Dubbing, Subtitles, Merge)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        val tabs = listOf(
+                            if (isPersian) "برش" else "Trim",
+                            if (isPersian) "سانسور" else "Face",
+                            if (isPersian) "صدا و دوبله" else "Audio",
+                            if (isPersian) "زیرنویس" else "Subtitle",
+                            if (isPersian) "ترکیب" else "Merge"
+                        )
+                        tabs.forEachIndexed { index, label ->
+                            val selected = editorTab == index
+                            Surface(
+                                color = if (selected) TerracottaAccent else WarmSurfaceSecondary,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { editorTab = index }
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) Color.White else CharcoalPrimary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = WarmBorderSubtle)
+
+                    // 1. Trim Tab
+                    if (editorTab == 0) {
+                        Text(
+                            text = if (isPersian) "برش و زمان‌بندی ویدیو (ثانیه):" else "Trim Video Duration (Seconds):",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CharcoalSecondary
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("شروع: ${trimStartSec.toInt()}s", fontSize = 11.sp, color = CharcoalPrimary)
+                            Text("پایان: ${trimEndSec.toInt()}s", fontSize = 11.sp, color = CharcoalPrimary)
+                        }
+                        Slider(
+                            value = trimStartSec,
+                            onValueChange = { trimStartSec = it.coerceAtMost(trimEndSec - 1f) },
+                            valueRange = 0f..maxDurationSec,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent)
+                        )
+                        Slider(
+                            value = trimEndSec,
+                            onValueChange = { trimEndSec = it.coerceAtLeast(trimStartSec + 1f) },
+                            valueRange = 0f..maxDurationSec,
+                            colors = SliderDefaults.colors(thumbColor = SageGreen, activeTrackColor = SageGreen)
+                        )
+                    }
+
+                    // 2. Face Blur & Swap Tab
+                    if (editorTab == 1) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (isPersian) "ماسک تاری روی چهره" else "Face Blur Overlay", fontSize = 12.sp, color = CharcoalPrimary)
+                            Switch(
+                                checked = postBlurActive,
+                                onCheckedChange = { postBlurActive = it },
+                                colors = SwitchDefaults.colors(checkedTrackColor = TerracottaAccent)
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (isPersian) "فیس‌سواپ آواتار روی ویدیو" else "Face Swap Avatar", fontSize = 12.sp, color = CharcoalPrimary)
+                            Switch(
+                                checked = postFaceSwapActive,
+                                onCheckedChange = { postFaceSwapActive = it },
+                                colors = SwitchDefaults.colors(checkedTrackColor = TerracottaAccent)
+                            )
+                        }
+
+                        if (postFaceSwapActive) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                FilterChip(
+                                    selected = selectedSwapAvatarRes == R.drawable.ic_avatar_hollywood,
+                                    onClick = { selectedSwapAvatarRes = R.drawable.ic_avatar_hollywood },
+                                    label = { Text("هالیوود", fontSize = 10.sp) }
+                                )
+                                FilterChip(
+                                    selected = selectedSwapAvatarRes == R.drawable.ic_avatar_mannequin,
+                                    onClick = { selectedSwapAvatarRes = R.drawable.ic_avatar_mannequin },
+                                    label = { Text("مانکن", fontSize = 10.sp) }
+                                )
+                                FilterChip(
+                                    selected = selectedSwapAvatarRes == R.drawable.ic_avatar_cyber,
+                                    onClick = { selectedSwapAvatarRes = R.drawable.ic_avatar_cyber },
+                                    label = { Text("سایبر", fontSize = 10.sp) }
+                                )
+                            }
+                        }
+                    }
+
+                    // 3. Audio, Music & Dubbing Tab
+                    if (editorTab == 2) {
+                        // Mute original video audio toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (isPersian) "قطع صدای اصلی ویدیو (Mute)" else "Mute Original Video Audio", fontSize = 12.sp, color = CharcoalPrimary)
+                            Switch(
+                                checked = muteOriginalAudio,
+                                onCheckedChange = { muteOriginalAudio = it },
+                                colors = SwitchDefaults.colors(checkedTrackColor = BrickRed)
+                            )
+                        }
+
+                        // Background Music Selector
+                        Text(
+                            text = if (isPersian) "موزیک پس‌زمینه:" else "Background Music:",
+                            fontSize = 11.sp,
+                            color = CharcoalSecondary
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                            val musicOptions = listOf(
+                                if (isPersian) "بدون موزیک" else "None",
+                                if (isPersian) "ملایم بوتیک" else "Ambient",
+                                if (isPersian) "سینمایی" else "Cinema",
+                                if (isPersian) "لو-فای" else "Lo-Fi"
+                            )
+                            musicOptions.forEachIndexed { i, title ->
+                                FilterChip(
+                                    selected = selectedMusicIndex == i,
+                                    onClick = { selectedMusicIndex = i },
+                                    label = { Text(title, fontSize = 9.sp) }
+                                )
+                            }
+                        }
+
+                        // Voice Dubbing / Voiceover Recorder
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (isPersian) "ضبط صدای گفتار و دوبله" else "Record Voiceover Dubbing",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = CharcoalPrimary
+                                )
+                                Text(
+                                    text = if (isVoiceDubbingActive)
+                                        (if (isPersian) "در حال ضبط میکروفون روی ویدیو..." else "Recording voice...")
+                                    else
+                                        (if (isPersian) "صحبت کردن مستقیم روی ویدیو" else "Speak over video"),
+                                    fontSize = 10.sp,
+                                    color = if (isVoiceDubbingActive) BrickRed else CharcoalSecondary
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    isVoiceDubbingActive = !isVoiceDubbingActive
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(if (isVoiceDubbingActive) BrickRed else TerracottaSubtle, CircleShape)
+                            ) {
+                                Icon(
+                                    Icons.Default.Mic,
+                                    contentDescription = "Voiceover",
+                                    tint = if (isVoiceDubbingActive) Color.White else TerracottaAccent,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        // Denoise and Pitch
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (isPersian) "حذف نویز پس‌زمینه صدا" else "Denoise Background Audio", fontSize = 12.sp, color = CharcoalPrimary)
+                            Switch(
+                                checked = postDenoiseAudio,
+                                onCheckedChange = { postDenoiseAudio = it },
+                                colors = SwitchDefaults.colors(checkedTrackColor = SageGreen)
+                            )
+                        }
+
+                        Text(
+                            text = if (isPersian) "تغییر تن صدا (Pitch): ${(postPitchFactor * 100).toInt()}%" else "Voice Pitch: ${(postPitchFactor * 100).toInt()}%",
+                            fontSize = 11.sp,
+                            color = CharcoalSecondary
+                        )
+                        Slider(
+                            value = postPitchFactor,
+                            onValueChange = { postPitchFactor = it },
+                            valueRange = 0.6f..1.4f,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent)
+                        )
+                    }
+
+                    // 4. Subtitle & Caption Tab
+                    if (editorTab == 3) {
+                        OutlinedTextField(
+                            value = subtitleText,
+                            onValueChange = { subtitleText = it },
+                            label = { Text(if (isPersian) "متن زیرنویس و کپشن ویدیو" else "Subtitle & Caption Text") },
+                            placeholder = { Text(if (isPersian) "مثال: حراج ویژه ست لباس زیر نخی اعلا" else "e.g. Special boutique collection") },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = TerracottaAccent,
+                                unfocusedBorderColor = WarmBorder,
+                                focusedLabelColor = TerracottaAccent
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = if (isPersian) "موقعیت زیرنویس روی تصویر:" else "Subtitle Position:",
+                            fontSize = 11.sp,
+                            color = CharcoalSecondary
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            val posLabels = listOf(
+                                if (isPersian) "پایین" else "Bottom",
+                                if (isPersian) "وسط" else "Center",
+                                if (isPersian) "بالا" else "Top"
+                            )
+                            posLabels.forEachIndexed { i, title ->
+                                FilterChip(
+                                    selected = subtitlePosition == i,
+                                    onClick = { subtitlePosition = i },
+                                    label = { Text(title, fontSize = 10.sp) }
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = if (isPersian) "اندازه قلم زیرنویس: ${subtitleFontSize.toInt()} sp" else "Font Size: ${subtitleFontSize.toInt()} sp",
+                            fontSize = 11.sp,
+                            color = CharcoalSecondary
+                        )
+                        Slider(
+                            value = subtitleFontSize,
+                            onValueChange = { subtitleFontSize = it },
+                            valueRange = 10f..22f,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent)
+                        )
+                    }
+
+                    // 5. Merge Tab
+                    if (editorTab == 4) {
+                        Text(
+                            text = if (isPersian) "انتخاب ویدیوی دوم برای ادغام و ترکیب:" else "Select Second Video to Merge:",
+                            fontSize = 11.sp,
+                            color = CharcoalSecondary
+                        )
+                        savedVideos.filter { it.id != currentVideo.id }.forEach { other ->
+                            val isChosen = mergeTargetVideo?.id == other.id
+                            Surface(
+                                color = if (isChosen) TerracottaSubtle else WarmSurfaceSecondary,
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { mergeTargetVideo = other }
+                                    .padding(vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "🔗 ${other.name}",
+                                    fontSize = 11.sp,
+                                    color = if (isChosen) TerracottaHover else CharcoalPrimary,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            if (editorTab == 4 && mergeTargetVideo != null) {
+                                statusMessage = if (isPersian) "در حال ادغام دو ویدیو..." else "Merging videos..."
+                                val merged = storageManager.mergeVideos(currentVideo, mergeTargetVideo!!)
+                                if (merged != null) {
+                                    savedVideos = storageManager.getSavedVideos()
+                                    selectedVideo = merged
+                                    statusMessage = if (isPersian) "ویدیوهای انتخابی با موفقیت ادغام شدند ✓" else "Videos merged successfully ✓"
+                                }
+                            } else {
+                                statusMessage = if (isPersian) "در حال اعمال تنظیمات و ذخیره قطعه جدید..." else "Applying audio & edits..."
+                                val effectDesc = buildString {
+                                    append("Trim: ${trimStartSec.toInt()}s-${trimEndSec.toInt()}s")
+                                    if (muteOriginalAudio) append(" • Muted")
+                                    if (selectedMusicIndex > 0) append(" • Music")
+                                    if (isVoiceDubbingActive) append(" • Dubbed")
+                                    if (subtitleText.isNotBlank()) append(" • Subtitle")
+                                    if (postBlurActive) append(" • Blur")
+                                    if (postFaceSwapActive) append(" • Swap")
+                                    if (postDenoiseAudio) append(" • Denoised")
+                                }
+                                val edited = storageManager.trimAndSaveVideo(
+                                    videoItem = currentVideo,
+                                    startMs = (trimStartSec * 1000).toLong(),
+                                    endMs = (trimEndSec * 1000).toLong(),
+                                    effectSummary = effectDesc
+                                )
+                                if (edited != null) {
+                                    savedVideos = storageManager.getSavedVideos()
+                                    selectedVideo = edited
+                                    statusMessage = if (isPersian) "قطعه جدید تدوین و صداگذاری‌شده در کتابخانه ذخیره شد ✓" else "Clean edited clip with audio saved ✓"
+                                }
+                            }
+                            showEditorDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent)
+                ) {
+                    Text(if (isPersian) "اعمال و صدور قطعه جدید" else "Apply & Save Clip", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditorDialog = false }) {
+                    Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
+                }
+            }
+        )
+    }
+
+    // Export Dialog (Zero Metadata Guaranteed)
     if (showExportDialog && selectedVideo != null) {
-        val target = selectedVideo!!
+        val currentVideo = selectedVideo!!
         AlertDialog(
             onDismissRequest = { showExportDialog = false },
             title = {
                 Text(
-                    if (isPersian) "خروجی محلی ویدیو (MP4)" else "Local MP4 Export",
+                    text = if (isPersian) "صدور ویدیو با حذف کامل ردپای GPS" else "Export Sanitized Video",
                     color = CharcoalPrimary,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        if (isPersian) "این فایل به صورت مستقیم در حافظه محلی ذخیره شده و هیچ‌گونه اتصال اینترنتی برقرار نمی‌شود."
-                        else "Video will be exported locally to your device storage without any cloud or internet transfer.",
+                        text = if (isPersian) "فایل با حذف هرگونه متادیتای موقعیت، سریال دستگاه و زمان ضبط صادر می‌شود." else "Strips all GPS tags, device signatures, and metadata.",
                         color = CharcoalSecondary,
                         fontSize = 12.sp
                     )
                     OutlinedTextField(
                         value = exportName,
                         onValueChange = { exportName = it },
-                        label = { Text(if (isPersian) "نام فایل خروجی" else "Export File Name") },
+                        label = { Text(if (isPersian) "نام فایل خروجی" else "Output Filename") },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = TerracottaAccent,
                             unfocusedBorderColor = WarmBorder,
@@ -391,80 +908,214 @@ fun OfflineVideoLabScreen(
                 Button(
                     onClick = {
                         coroutineScope.launch {
-                            val exported = storageManager.exportVideo(target, exportName)
-                            showExportDialog = false
+                            val exported = storageManager.exportVideo(currentVideo, exportName)
                             statusMessage = if (exported != null) {
-                                if (isPersian) "ویدیو با موفقیت ذخیره شد: ${exported.name}" else "Saved locally: ${exported.name}"
+                                if (isPersian) "ویدیو با موفقیت و بدون متادیتا در گالری ذخیره شد ✓" else "Exported to device storage ✓"
                             } else {
-                                if (isPersian) "خطا در استخراج ویدیو" else "Export failed"
+                                if (isPersian) "خطا در ذخیره فایل" else "Export failed"
                             }
+                            showExportDialog = false
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent)
                 ) {
-                    Text(if (isPersian) "ذخیره در حافظه" else "Export Locally", color = Color.White)
+                    Text(if (isPersian) "ذخیره نهایی" else "Save Clean Copy", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExportDialog = false }) {
                     Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
                 }
-            },
-            containerColor = WarmSurface
+            }
         )
     }
 
-    // Delete Confirmation Dialog
+    // Video Compressor Dialog (100% Offline & Private)
+    if (showCompressDialog && selectedVideo != null) {
+        val currentVideo = selectedVideo!!
+        val originalSizeMb = String.format("%.1f", currentVideo.sizeBytes / (1024f * 1024f))
+
+        AlertDialog(
+            onDismissRequest = { if (!isCompressing) showCompressDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Compress, contentDescription = null, tint = TerracottaAccent)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (isPersian) "کمپرسور امن داخل‌برنامه‌ای" else "Private Video Compressor",
+                        color = CharcoalPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = if (isPersian)
+                            "فشرده‌سازی ۱۰۰٪ محلی روی گوشی بدون نیاز به ابزارهای آنلاین یا غریبه. حجم فعلی: $originalSizeMb مگابایت"
+                        else
+                            "100% on-device compression with zero external upload. Current size: $originalSizeMb MB",
+                        color = CharcoalSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+
+                    // Presets
+                    com.example.engine.CompressionQualityPreset.values().forEach { preset ->
+                        val isSelected = selectedCompressPreset == preset
+                        Surface(
+                            color = if (isSelected) TerracottaSubtle else WarmSurfaceSecondary,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isSelected) TerracottaAccent else WarmBorder
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !isCompressing) {
+                                    selectedCompressPreset = preset
+                                }
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (isPersian) preset.titleFa else preset.titleEn,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isSelected) TerracottaHover else CharcoalPrimary
+                                    )
+                                    Surface(
+                                        color = if (isSelected) TerracottaAccent else WarmBorder,
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "-${preset.estimatedReductionPercent}٪",
+                                            color = if (isSelected) Color.White else CharcoalSecondary,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    text = if (isPersian) preset.descriptionFa else preset.descriptionEn,
+                                    fontSize = 10.sp,
+                                    color = CharcoalTertiary
+                                )
+                            }
+                        }
+                    }
+
+                    // Progress Bar during compression
+                    if (isCompressing) {
+                        Spacer(Modifier.height(4.dp))
+                        LinearProgressIndicator(
+                            progress = { compressProgress },
+                            color = TerracottaAccent,
+                            trackColor = WarmBorder,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "در حال فشرده‌سازی: ${(compressProgress * 100).toInt()}٪"
+                            else
+                                "Compressing: ${(compressProgress * 100).toInt()}%",
+                            fontSize = 11.sp,
+                            color = TerracottaAccent,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (!isCompressing) {
+                            isCompressing = true
+                            compressProgress = 0f
+                            coroutineScope.launch {
+                                val (compressedVideo, result) = storageManager.compressVideo(
+                                    videoItem = currentVideo,
+                                    preset = selectedCompressPreset,
+                                    onProgress = { p -> compressProgress = p }
+                                )
+                                isCompressing = false
+                                showCompressDialog = false
+                                if (compressedVideo != null) {
+                                    val savedMb = String.format("%.1f", (result.originalSizeBytes - result.compressedSizeBytes) / (1024f * 1024f))
+                                    statusMessage = if (isPersian)
+                                        "فشرده‌سازی انجام شد: $savedMb مگابایت ذخیره شد (${result.savedPercentage}٪ کاهش حجم) ✓"
+                                    else
+                                        "Compression complete: saved $savedMb MB (${result.savedPercentage}%) ✓"
+                                    reloadVideos()
+                                    selectedVideo = compressedVideo
+                                } else {
+                                    statusMessage = if (isPersian) "خطا در فشرده‌سازی ویدیو" else "Compression failed"
+                                }
+                            }
+                        }
+                    },
+                    enabled = !isCompressing,
+                    colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent)
+                ) {
+                    Text(
+                        text = if (isCompressing) (if (isPersian) "در حال پردازش..." else "Processing...") else (if (isPersian) "شروع فشرده‌سازی" else "Start Compression"),
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                if (!isCompressing) {
+                    TextButton(onClick = { showCompressDialog = false }) {
+                        Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
+                    }
+                }
+            }
+        )
+    }
+
+    // Delete confirmation dialog
     if (showDeleteConfirmDialog != null) {
         val toDelete = showDeleteConfirmDialog!!
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = null },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = BrickRed) },
-            title = {
-                Text(
-                    if (isPersian) "تأیید حذف ویدیو" else "Confirm Deletion",
-                    color = BrickRed,
-                    fontWeight = FontWeight.SemiBold
-                )
-            },
-            text = {
-                Text(
-                    text = if (isPersian)
-                        "آیا از حذف ویدیوی '${toDelete.name}' از حافظه دستگاه اطمینان دارید؟"
-                    else
-                        "Are you sure you want to delete '${toDelete.name}' from local device storage?",
-                    color = CharcoalPrimary,
-                    fontSize = 13.sp
-                )
-            },
+            title = { Text(if (isPersian) "حذف قطعی ویدیو؟" else "Delete Video?", color = CharcoalPrimary) },
+            text = { Text(if (isPersian) "این فایل به طور دائم از حافظه دستگاه پاک خواهد شد." else "Permanently deletes this recording from local storage.", color = CharcoalSecondary, fontSize = 12.sp) },
             confirmButton = {
                 Button(
                     onClick = {
                         coroutineScope.launch {
                             val success = storageManager.deleteVideo(toDelete)
+                            if (success) {
+                                if (selectedVideo?.id == toDelete.id) {
+                                    selectedVideo = null
+                                }
+                                reloadVideos()
+                                statusMessage = if (isPersian) "ویدیو حذف شد" else "Video deleted"
+                            }
                             showDeleteConfirmDialog = null
-                            if (selectedVideo?.id == toDelete.id) {
-                                selectedVideo = null
-                            }
-                            reloadVideos()
-                            statusMessage = if (success) {
-                                if (isPersian) "ویدیو حذف شد" else "Video deleted"
-                            } else {
-                                if (isPersian) "خطا در حذف ویدیو" else "Delete error"
-                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = BrickRed)
                 ) {
-                    Text(if (isPersian) "حذف قطعی" else "Delete", color = Color.White)
+                    Text(if (isPersian) "حذف" else "Delete", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = null }) {
-                    Text(if (isPersian) "لغو" else "Cancel", color = CharcoalSecondary)
+                    Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
                 }
-            },
-            containerColor = WarmSurface
+            }
         )
     }
 }

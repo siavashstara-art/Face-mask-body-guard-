@@ -882,7 +882,9 @@ fun SettingsPerformancePanel(
     isPersian: Boolean,
     onPresetChange: (PerformancePreset) -> Unit,
     onShowPrivacyAudit: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    watermarkConfig: WatermarkConfig = WatermarkConfig(),
+    onWatermarkUpdate: (WatermarkConfig) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -959,6 +961,88 @@ fun SettingsPerformancePanel(
             }
         }
 
+        HorizontalDivider(color = WarmBorderSubtle)
+
+        // Anti-Theft Brand Watermark Section
+        Card(
+            colors = CardDefaults.cardColors(containerColor = WarmSurfaceSecondary),
+            shape = RoundedCornerShape(10.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isPersian) "واترمارک و ضد سرقت عکس" else "Anti-Theft Watermark",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CharcoalPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = if (isPersian) "درج نام کانال برای جلوگیری از کپی توسط رقبا" else "Stamps your channel to protect shop images",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = CharcoalSecondary
+                        )
+                    }
+                    Switch(
+                        checked = watermarkConfig.enabled,
+                        onCheckedChange = { onWatermarkUpdate(watermarkConfig.copy(enabled = it)) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = TerracottaAccent
+                        )
+                    )
+                }
+
+                if (watermarkConfig.enabled) {
+                    OutlinedTextField(
+                        value = watermarkConfig.handleText,
+                        onValueChange = { onWatermarkUpdate(watermarkConfig.copy(handleText = it)) },
+                        label = { Text(if (isPersian) "آیدی پیج یا کانال" else "Channel / Page ID") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = TerracottaAccent,
+                            unfocusedBorderColor = WarmBorder,
+                            focusedLabelColor = TerracottaAccent
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Position Selector
+                    Text(
+                        text = if (isPersian) "موقعیت قرارگیری روی تصویر:" else "Watermark Position:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CharcoalSecondary
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        WatermarkPosition.values().forEach { pos ->
+                            val selected = watermarkConfig.position == pos
+                            FilterChip(
+                                selected = selected,
+                                onClick = { onWatermarkUpdate(watermarkConfig.copy(position = pos)) },
+                                label = { Text(if (isPersian) pos.titleFa else pos.titleEn, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = TerracottaAccent,
+                                    selectedLabelColor = Color.White
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = if (selected) TerracottaAccent else WarmBorder,
+                                    enabled = true,
+                                    selected = selected
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Privacy Audit Button
         OutlinedButton(
             onClick = onShowPrivacyAudit,
@@ -968,7 +1052,7 @@ fun SettingsPerformancePanel(
             Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = SageGreen, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (isPersian) "مشاهده ممیزی امنیت و حریم خصوصی" else "Inspect Offline Privacy Seal",
+                text = if (isPersian) "مشاهده ممیزی امنیت و حریم خصوصی (بدون GPS)" else "Inspect Offline & Zero-GPS Seal",
                 color = CharcoalPrimary
             )
         }

@@ -49,6 +49,12 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _swapConfig = MutableStateFlow(SwapConfig())
     val swapConfig: StateFlow<SwapConfig> = _swapConfig.asStateFlow()
 
+    private val _currentAppMode = MutableStateFlow(AppModePreset.STANDARD)
+    val currentAppMode: StateFlow<AppModePreset> = _currentAppMode.asStateFlow()
+
+    private val _watermarkConfig = MutableStateFlow(WatermarkConfig())
+    val watermarkConfig: StateFlow<WatermarkConfig> = _watermarkConfig.asStateFlow()
+
     private val _activeTab = MutableStateFlow(ActiveStudioTab.NONE)
     val activeTab: StateFlow<ActiveStudioTab> = _activeTab.asStateFlow()
 
@@ -66,6 +72,18 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _isPersian = MutableStateFlow(true) // Persian RTL default as requested by user
     val isPersian: StateFlow<Boolean> = _isPersian.asStateFlow()
+
+    private val _appLanguage = MutableStateFlow(AppLanguage.PERSIAN)
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    private val _dualCameraConfig = MutableStateFlow(DualCameraConfig())
+    val dualCameraConfig: StateFlow<DualCameraConfig> = _dualCameraConfig.asStateFlow()
+
+    private val _screenRecordConfig = MutableStateFlow(ScreenRecordModeConfig())
+    val screenRecordConfig: StateFlow<ScreenRecordModeConfig> = _screenRecordConfig.asStateFlow()
+
+    private val _isSimpleMode = MutableStateFlow(false)
+    val isSimpleMode: StateFlow<Boolean> = _isSimpleMode.asStateFlow()
 
     private val _showPrivacyAudit = MutableStateFlow(false)
     val showPrivacyAudit: StateFlow<Boolean> = _showPrivacyAudit.asStateFlow()
@@ -113,6 +131,134 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
         _swapConfig.value = config
     }
 
+    fun updateWatermarkConfig(config: WatermarkConfig) {
+        _watermarkConfig.value = config
+    }
+
+    fun applyAppModePreset(preset: AppModePreset) {
+        _currentAppMode.value = preset
+        when (preset) {
+            AppModePreset.TRIPLE_AI_SHIELD -> {
+                // Activate ALL THREE simultaneously:
+                // 1. Face Detection active
+                // 2. Blur & Privacy Mask active
+                // 3. Face Swap & Body Silhouette active
+                _privacyConfig.value = _privacyConfig.value.copy(
+                    autoFaceTracking = true,
+                    blurType = BlurType.GAUSSIAN,
+                    blurIntensity = 0.85f,
+                    maskType = PrivacyMaskType.EYES_VISOR,
+                    safetyMarginMultiplier = 1.40f
+                )
+                _swapConfig.value = _swapConfig.value.copy(
+                    faceSwapEnabled = true,
+                    selectedAvatarId = "glamour",
+                    faceBlendAlpha = 0.95f,
+                    bodySwapEnabled = true,
+                    selectedBodyId = "hourglass",
+                    tripleShieldEnforced = true
+                )
+                _silhouetteConfig.value = _silhouetteConfig.value.copy(
+                    enabled = true,
+                    waistContour = -0.15f
+                )
+                _backgroundConfig.value = _backgroundConfig.value.copy(
+                    mode = BackgroundMode.BLUR
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "سپر سه‌گانه هوشمند فعال شد (ردیاب زنده + تاری چهره + سواپ مدل)"
+                else
+                    "Triple Protection active (Face Detection + Blur + Face Swap)"
+            }
+            AppModePreset.BOUTIQUE_SELLER -> {
+                _privacyConfig.value = _privacyConfig.value.copy(
+                    autoFaceTracking = true,
+                    maskType = PrivacyMaskType.EYES_VISOR,
+                    safetyMarginMultiplier = 1.35f
+                )
+                _backgroundConfig.value = _backgroundConfig.value.copy(
+                    mode = BackgroundMode.BLUR
+                )
+                _catalogConfig.value = _catalogConfig.value.copy(
+                    showPriceBadge = true
+                )
+                _watermarkConfig.value = _watermarkConfig.value.copy(
+                    enabled = true
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت بوتیک و مدلینگ فعال شد (چهره و اتاق پنهان شدند)"
+                else
+                    "Boutique Seller mode applied (Face & room anonymized)"
+            }
+            AppModePreset.ANONYMOUS_REPORTER -> {
+                _privacyConfig.value = _privacyConfig.value.copy(
+                    autoFaceTracking = true,
+                    blurType = BlurType.PIXELATE,
+                    pixelBlockSize = 26,
+                    maskType = PrivacyMaskType.FULL_SHIELD,
+                    safetyMarginMultiplier = 1.5f
+                )
+                _backgroundConfig.value = _backgroundConfig.value.copy(
+                    mode = BackgroundMode.BLUR
+                )
+                _voiceConfig.value = _voiceConfig.value.copy(
+                    pitchProfile = PitchProfile.DEEP_GUARD,
+                    noiseReduction = true
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت گزارشگر امن فعال شد (تاری کامل + صدای بم + حذف ردپای GPS)"
+                else
+                    "Secure Reporter mode applied (Mosaic + Deep voice + Zero metadata)"
+            }
+            AppModePreset.FACELESS_VLOG -> {
+                _storyStreamConfig.value = _storyStreamConfig.value.copy(
+                    showStoryGuide916 = true
+                )
+                _swapConfig.value = _swapConfig.value.copy(
+                    faceSwapEnabled = true,
+                    selectedAvatarId = "hollywood"
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت استوری و ولاگ مستعار فعال شد"
+                else
+                    "Faceless Vlog & Story mode applied"
+            }
+            AppModePreset.INTERVIEW_DOC -> {
+                _performancePreset.value = PerformancePreset.LOW_REDMI
+                _voiceConfig.value = _voiceConfig.value.copy(
+                    pitchProfile = PitchProfile.NATURAL,
+                    micGain = 1.35f,
+                    noiseReduction = true
+                )
+                _faceStyleConfig.value = _faceStyleConfig.value.copy(
+                    preset = FilterPreset.SMOOTH_WARM
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت فیلمبرداری مصاحبه‌ای فعال شد (۲۴ فریم + کادربندی گفتگو)"
+                else
+                    "Documentary Interview mode applied (24fps + Dialogue Focus)"
+            }
+            AppModePreset.CINEMATIC_SHORT -> {
+                _performancePreset.value = PerformancePreset.LOW_REDMI
+                _faceStyleConfig.value = _faceStyleConfig.value.copy(
+                    preset = FilterPreset.VINTAGE_SEPIA,
+                    contrast = 0.35f,
+                    warmth = 0.15f
+                )
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت فیلم کوتاه سینمایی فعال شد (کادر عریض ۲۱:۹ + اصلاح رنگ سینمایی)"
+                else
+                    "Cinematic Short Film mode applied (21:9 Anamorphic + Cinema LUT)"
+            }
+            AppModePreset.STANDARD -> {
+                _statusMessage.value = if (_isPersian.value)
+                    "حالت استاندارد استودیو بازگردانده شد"
+                else
+                    "Standard studio mode restored"
+            }
+        }
+    }
+
     fun toggleLiveStream() {
         val current = _storyStreamConfig.value
         val newState = !current.isLiveStreaming
@@ -138,7 +284,66 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun toggleLanguage() {
-        _isPersian.value = !_isPersian.value
+        cycleLanguage()
+    }
+
+    fun cycleLanguage() {
+        val next = when (_appLanguage.value) {
+            AppLanguage.PERSIAN -> AppLanguage.ARABIC
+            AppLanguage.ARABIC -> AppLanguage.ENGLISH
+            AppLanguage.ENGLISH -> AppLanguage.PERSIAN
+        }
+        setLanguage(next)
+    }
+
+    fun setLanguage(lang: AppLanguage) {
+        _appLanguage.value = lang
+        _isPersian.value = (lang == AppLanguage.PERSIAN)
+        _statusMessage.value = when (lang) {
+            AppLanguage.PERSIAN -> "زبان برنامه: فارسی"
+            AppLanguage.ARABIC -> "تم تغيير لغة التطبيق إلى العربية"
+            AppLanguage.ENGLISH -> "Language changed to English"
+        }
+    }
+
+    fun toggleDualCamera() {
+        val current = _dualCameraConfig.value
+        val newState = !current.enabled
+        _dualCameraConfig.value = current.copy(enabled = newState)
+        _statusMessage.value = when (_appLanguage.value) {
+            AppLanguage.PERSIAN -> if (newState) "حالت دو دوربینه همزمان (PiP) فعال شد" else "حالت دو دوربینه غیرفعال شد"
+            AppLanguage.ARABIC -> if (newState) "تم تفعيل الكاميرا المزدوجة المتزامنة (صورة داخل صورة)" else "تم إيقاف الكاميرا المزدوجة"
+            AppLanguage.ENGLISH -> if (newState) "Dual-Camera PiP enabled" else "Dual-Camera disabled"
+        }
+    }
+
+    fun updateDualCameraConfig(config: DualCameraConfig) {
+        _dualCameraConfig.value = config
+    }
+
+    fun toggleScreenRecording() {
+        val current = _screenRecordConfig.value
+        val newState = !current.isRecordingScreen
+        _screenRecordConfig.value = current.copy(isRecordingScreen = newState)
+        _statusMessage.value = when (_appLanguage.value) {
+            AppLanguage.PERSIAN -> if (newState) "ضبط صفحه با فیلتر صدا آغاز شد" else "ضبط صفحه ذخیره و متوقف شد"
+            AppLanguage.ARABIC -> if (newState) "بدأ تسجيل الشاشة مع تغيير نبرة الصوت" else "تم حفظ تسجيل الشاشة وإيقافه"
+            AppLanguage.ENGLISH -> if (newState) "Screen recording with Voice Changer started" else "Screen recording saved"
+        }
+    }
+
+    fun updateScreenRecordConfig(config: ScreenRecordModeConfig) {
+        _screenRecordConfig.value = config
+    }
+
+    fun toggleSimpleMode() {
+        val newState = !_isSimpleMode.value
+        _isSimpleMode.value = newState
+        _statusMessage.value = when (_appLanguage.value) {
+            AppLanguage.PERSIAN -> if (newState) "حالت فوق‌العاده ساده و روان (ویژه ردمی نوت ۸) فعال شد" else "حالت استودیو پیشرفته فعال شد"
+            AppLanguage.ARABIC -> if (newState) "تم تفعيل الوضع البسيط والسلس (خاص بـ Redmi Note 8)" else "تم تفعيل وضع الاستوديو المتقدم"
+            AppLanguage.ENGLISH -> if (newState) "Ultra-Simple Mode enabled for Redmi Note 8" else "Advanced Studio Mode enabled"
+        }
     }
 
     fun setShowPrivacyAudit(show: Boolean) {

@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Minimalist Boutique Persona with Sleek Privacy Visor -->
+    <!-- Head Base -->
+    <path
+        android:fillColor="#F2ECE4"
+        android:pathData="M78,65 C78,32 178,32 178,65 C178,130 165,215 128,235 C91,215 78,130 78,65 Z" />
+    <!-- Sleek High Bun Hairdo -->
+    <path
+        android:fillColor="#211F1D"
+        android:pathData="M110,25 C110,12 146,12 146,25 C146,38 110,38 110,25 Z" />
+    <path
+        android:fillColor="#2B2824"
+        android:pathData="M72,60 C72,25 110,32 128,32 C146,32 184,25 184,60 C184,80 178,95 174,100 C170,60 155,42 128,42 C101,42 86,60 82,100 C78,95 72,80 72,60 Z" />
+    <!-- Modern Metallic Privacy Visor Bar -->
+    <path
+        android:fillColor="#1C2127"
+        android:pathData="M60,95 C95,90 161,90 196,95 C198,110 190,118 165,118 C135,118 121,118 91,118 C66,118 58,110 60,95 Z" />
+    <path
+        android:fillColor="#4A7C59"
+        android:pathData="M80,102 C110,100 146,100 176,102 C178,107 170,111 150,111 C130,111 126,111 106,111 C86,111 78,107 80,102 Z" />
+    <!-- Elegant Nude Lip Tone -->
+    <path
+        android:fillColor="#C47D68"
+        android:pathData="M114,180 C122,175 126,177 128,176 C130,177 134,175 142,180 C144,185 138,192 128,191 C118,192 112,185 114,180 Z" />
+</vector>

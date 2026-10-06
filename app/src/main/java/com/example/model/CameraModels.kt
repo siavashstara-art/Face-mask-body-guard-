@@ -54,6 +54,34 @@ data class ProductCatalogConfig(
     val showMannequinGuide: Boolean = true
 )
 
+enum class AppLanguage(val code: String, val titleNative: String, val shortBadge: String) {
+    PERSIAN("fa", "فارسی", "فا"),
+    ARABIC("ar", "العربية", "عرب"),
+    ENGLISH("en", "English", "EN")
+}
+
+enum class InsetCorner(val titleFa: String, val titleAr: String, val titleEn: String) {
+    TOP_RIGHT("بالا راست", "أعلى اليمين", "Top Right"),
+    TOP_LEFT("بالا چپ", "أعلى اليسار", "Top Left"),
+    BOTTOM_RIGHT("پایین راست", "أسفل اليمين", "Bottom Right"),
+    BOTTOM_LEFT("پایین چپ", "أسفل اليسار", "Bottom Left")
+}
+
+data class DualCameraConfig(
+    val enabled: Boolean = false,
+    val isFrontPrimary: Boolean = true,
+    val corner: InsetCorner = InsetCorner.TOP_RIGHT,
+    val insetRatio: Float = 0.28f, // Inset window size relative to screen
+    val showInsetGrid: Boolean = true
+)
+
+data class ScreenRecordModeConfig(
+    val isRecordingScreen: Boolean = false,
+    val captureMicrophoneWithVoiceChanger: Boolean = true,
+    val hideControlsOnRecord: Boolean = false,
+    val watermarkScreen: Boolean = true
+)
+
 data class VideoItem(
     val id: String,
     val uri: String,

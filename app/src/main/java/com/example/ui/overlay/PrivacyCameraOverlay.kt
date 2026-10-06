@@ -36,6 +36,7 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.AppModePreset
 import com.example.model.BackgroundConfig
 import com.example.model.BackgroundMode
 import com.example.model.BlurType
@@ -49,6 +50,8 @@ import com.example.model.ProductCatalogConfig
 import com.example.model.StoryStreamConfig
 import com.example.model.SwapConfig
 import com.example.model.TrackedFace
+import com.example.model.WatermarkConfig
+import com.example.model.WatermarkPosition
 import com.example.ui.theme.CharcoalPrimary
 import com.example.ui.theme.CharcoalSecondary
 import com.example.ui.theme.CharcoalTertiary
@@ -73,6 +76,8 @@ fun PrivacyCameraOverlay(
     storyStreamConfig: StoryStreamConfig = StoryStreamConfig(),
     catalogConfig: ProductCatalogConfig = ProductCatalogConfig(),
     swapConfig: SwapConfig = SwapConfig(),
+    watermarkConfig: WatermarkConfig = WatermarkConfig(),
+    currentAppMode: AppModePreset = AppModePreset.STANDARD,
     onTapAddManualZone: (Offset) -> Unit = {}
 ) {
     // Load virtual background image if selected
@@ -227,6 +232,22 @@ fun PrivacyCameraOverlay(
                     style = Stroke(width = 1.5f)
                 )
             }
+
+            // 4b. Cinematic 21:9 Aspect Ratio Letterboxing
+            if (currentAppMode == AppModePreset.CINEMATIC_SHORT) {
+                val barH = canvasH * 0.11f
+                drawRect(color = Color.Black, topLeft = Offset(0f, 0f), size = Size(canvasW, barH))
+                drawRect(color = Color.Black, topLeft = Offset(0f, canvasH - barH), size = Size(canvasW, barH))
+            }
+
+            // 4c. Documentary Interview Framing Grid (Rule of Thirds)
+            if (currentAppMode == AppModePreset.INTERVIEW_DOC) {
+                val gridColor = Color.White.copy(alpha = 0.25f)
+                drawLine(gridColor, Offset(canvasW * 0.333f, 0f), Offset(canvasW * 0.333f, canvasH), strokeWidth = 1.5f)
+                drawLine(gridColor, Offset(canvasW * 0.666f, 0f), Offset(canvasW * 0.666f, canvasH), strokeWidth = 1.5f)
+                drawLine(gridColor, Offset(0f, canvasH * 0.333f), Offset(canvasW, canvasH * 0.333f), strokeWidth = 1.5f)
+                drawLine(gridColor, Offset(0f, canvasH * 0.666f), Offset(canvasW, canvasH * 0.666f), strokeWidth = 1.5f)
+            }
         }
 
         // 5. Clean, Professional Alteration Transparency Badge (Warm, restrained, NOT neon)
@@ -340,6 +361,36 @@ fun PrivacyCameraOverlay(
                         text = catalogConfig.telegramChannel,
                         color = CharcoalTertiary,
                         fontSize = 10.sp
+                    )
+                }
+            }
+        }
+
+        // 9. Anti-Theft Brand Watermark
+        if (watermarkConfig.enabled && watermarkConfig.handleText.isNotBlank()) {
+            val align = when (watermarkConfig.position) {
+                WatermarkPosition.BOTTOM_RIGHT -> Alignment.BottomEnd
+                WatermarkPosition.BOTTOM_LEFT -> Alignment.BottomStart
+                WatermarkPosition.TOP_RIGHT -> Alignment.TopEnd
+                WatermarkPosition.CENTER_TILED -> Alignment.Center
+            }
+            Box(
+                modifier = Modifier
+                    .align(align)
+                    .padding(if (watermarkConfig.position == WatermarkPosition.CENTER_TILED) 0.dp else 24.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.Black.copy(alpha = watermarkConfig.opacity * 0.7f))
+                    .border(1.dp, Color.White.copy(alpha = watermarkConfig.opacity * 0.4f), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(TerracottaAccent))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = watermarkConfig.handleText,
+                        color = Color.White.copy(alpha = watermarkConfig.opacity),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

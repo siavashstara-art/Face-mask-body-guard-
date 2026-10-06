@@ -2,13 +2,40 @@ package com.example.model
 
 import com.example.R
 
+enum class AiEngineExecutionMode(
+    val titleEn: String,
+    val titleFa: String,
+    val badgeEn: String,
+    val badgeFa: String,
+    val descriptionEn: String,
+    val descriptionFa: String
+) {
+    OFFLINE_EDGE_LOCAL(
+        titleEn = "Offline Local Edge AI",
+        titleFa = "هوش مصنوعی آفلاین و محلی (پیش‌فرض امن)",
+        badgeEn = "100% Offline (Safe)",
+        badgeFa = "۱۰۰٪ آفلاین (امن و بدون اینترنت)",
+        descriptionEn = "Zero internet required. Runs strictly on-device on Redmi Note 8 with zero cloud data transmission.",
+        descriptionFa = "بدون نیاز به اینترنت. پردازش کاملاً داخلی روی پردازنده گوشی بدون آپلود داده‌ها؛ بدون لگ و باتری‌محور."
+    ),
+    ONLINE_CLOUD_HYBRID(
+        titleEn = "Online Cloud AI Generator",
+        titleFa = "هوش مصنوعی آنلاین و ابری",
+        badgeEn = "Cloud AI Active",
+        badgeFa = "سرویس ابری هوشمند متصل",
+        descriptionEn = "When connected to internet, accesses enhanced AI models, unlimited photorealistic faces, and deep styling.",
+        descriptionFa = "با اتصال به اینترنت، مدل‌های نامحدود، چهره‌های واقع‌گرایانه فوتورئال و ژورنال‌های پیشرفته فعال می‌شوند."
+    )
+}
+
 data class FaceSwapAvatar(
     val id: String,
     val titleEn: String,
     val titleFa: String,
     val drawableResId: Int,
     val descriptionEn: String,
-    val descriptionFa: String
+    val descriptionFa: String,
+    val isOnlineGenerated: Boolean = false
 )
 
 data class BodySwapMannequin(
@@ -22,6 +49,22 @@ data class BodySwapMannequin(
 
 object BundledSwapItems {
     val avatars = listOf(
+        FaceSwapAvatar(
+            id = "glamour",
+            titleEn = "Paris Haute Couture Supermodel",
+            titleFa = "سوپرمدل فشن پاریس (محبوب برای ژورنال)",
+            drawableResId = R.drawable.ic_avatar_glamour,
+            descriptionEn = "High-fashion glamour model with sunglasses and styled lips",
+            descriptionFa = "مدل شیک با عینک دودی فانتزی و آرایش نچرال جهت محافظت کامل از هویت"
+        ),
+        FaceSwapAvatar(
+            id = "minimalist",
+            titleEn = "Minimalist Visor Persona",
+            titleFa = "مدل مینیمال با نوار محافظتی",
+            drawableResId = R.drawable.ic_avatar_minimalist,
+            descriptionEn = "Sleek contemporary boutique model with modern visor",
+            descriptionFa = "مدل مدرن مینیمال با نوار سنسور شیک روی چشم‌ها"
+        ),
         FaceSwapAvatar(
             id = "hollywood",
             titleEn = "Hollywood Retro Glamour",
@@ -50,9 +93,17 @@ object BundledSwapItems {
 
     val mannequins = listOf(
         BodySwapMannequin(
+            id = "hourglass",
+            titleEn = "Luxury Hourglass Swimwear Form",
+            titleFa = "مانکن ساعت شنی لباس زیر و شنا",
+            drawableResId = R.drawable.ic_mannequin_hourglass,
+            descriptionEn = "Sculpted slim waist & contoured hips tailored for underwear display",
+            descriptionFa = "تنه ساعت شنی با خط کمر باریک مخصوص نمایش لباس زیر و مایو"
+        ),
+        BodySwapMannequin(
             id = "boutique",
             titleEn = "Luxury Boutique Torso",
-            titleFa = "مانکن بوتیک و لباس زیر",
+            titleFa = "مانکن بوتیک و لباس خواب",
             drawableResId = R.drawable.ic_mannequin_boutique,
             descriptionEn = "Full hourglass mannequin tailored for swimwear and lingerie",
             descriptionFa = "تنه مانکن ساعت شنی استاندارد مخصوص لباس زیر و شورت"
@@ -78,11 +129,13 @@ object BundledSwapItems {
 
 data class SwapConfig(
     val faceSwapEnabled: Boolean = false,
-    val selectedAvatarId: String = "hollywood",
+    val selectedAvatarId: String = "glamour",
     val faceBlendAlpha: Float = 0.95f,
     val bodySwapEnabled: Boolean = false,
-    val selectedBodyId: String = "boutique",
+    val selectedBodyId: String = "hourglass",
     val bodyBlendAlpha: Float = 0.88f,
     val bodyScale: Float = 1.0f,
-    val bodyOffsetY: Float = 0.0f
+    val bodyOffsetY: Float = 0.0f,
+    val aiExecutionMode: AiEngineExecutionMode = AiEngineExecutionMode.OFFLINE_EDGE_LOCAL,
+    val tripleShieldEnforced: Boolean = false // Enforces Face Detection + Blur Overlay + Swap simultaneously
 )
