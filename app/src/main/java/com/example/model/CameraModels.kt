@@ -20,8 +20,39 @@ enum class ActiveStudioTab {
     STYLE,
     BODY,
     VOICE,
+    SWAP,
+    STORY_STREAM,
+    CATALOG,
     SETTINGS
 }
+
+enum class StreamPlatform(val displayName: String, val defaultRtmpServer: String) {
+    YOUTUBE("YouTube Live", "rtmp://a.rtmp.youtube.com/live2"),
+    DISCORD("Discord / Virtual Stream", "rtmp://localhost:1935/live"),
+    TELEGRAM("Telegram Live", "rtmp://live.telegram.org/stream/"),
+    CUSTOM_RTMP("Custom RTMP Server", "")
+}
+
+data class StoryStreamConfig(
+    val showStoryGuide916: Boolean = false,
+    val storyHeadline: String = "",
+    val storySubtext: String = "",
+    val selectedPlatform: StreamPlatform = StreamPlatform.YOUTUBE,
+    val rtmpUrl: String = "rtmp://a.rtmp.youtube.com/live2",
+    val streamKey: String = "",
+    val isLiveStreaming: Boolean = false,
+    val streamBitrateKbps: Int = 2500
+)
+
+data class ProductCatalogConfig(
+    val productName: String = "شورت تک نخی اعلا",
+    val price: String = "۹۵,۰۰۰ تومان",
+    val sizes: String = "M / L / XL",
+    val fabricType: String = "۱۰۰٪ پنبه ضد حساسیت",
+    val telegramChannel: String = "@my_boutique_shop",
+    val showPriceBadge: Boolean = true,
+    val showMannequinGuide: Boolean = true
+)
 
 data class VideoItem(
     val id: String,

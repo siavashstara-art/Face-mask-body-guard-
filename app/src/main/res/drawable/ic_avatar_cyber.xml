@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Cyber Geometric Avatar Persona -->
+    <!-- Base polygonal face -->
+    <path
+        android:fillColor="#22201D"
+        android:strokeColor="#C85A32"
+        android:strokeWidth="2.5"
+        android:pathData="M128,30 L185,65 L190,140 L160,195 L128,230 L96,195 L66,140 L71,65 Z" />
+    <!-- Cyber Visor -->
+    <path
+        android:fillColor="#C85A32"
+        android:pathData="M75,95 L181,95 L175,125 L128,135 L81,125 Z" />
+    <!-- Visor Highlight -->
+    <path
+        android:fillColor="#FAECE6"
+        android:pathData="M90,105 L166,105 L160,112 L96,112 Z" />
+    <!-- Circuit Accents -->
+    <path
+        android:strokeColor="#A84522"
+        android:strokeWidth="1.5"
+        android:pathData="M128,145 L128,185 M105,160 L151,160 M115,200 L141,200" />
+</vector>

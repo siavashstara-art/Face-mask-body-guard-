@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Classic Hollywood Glamour Persona (Stylized Art-Deco Face) -->
+    <!-- Face Contour -->
+    <path
+        android:fillColor="#E8DDD2"
+        android:pathData="M70,70 C70,30 186,30 186,70 C186,130 170,210 128,230 C86,210 70,130 70,70 Z" />
+    <!-- Hair Silhouette -->
+    <path
+        android:fillColor="#2C2724"
+        android:pathData="M60,70 C55,20 100,10 128,10 C156,10 201,20 196,70 C205,95 200,140 180,150 C185,110 180,70 170,55 C150,35 106,35 86,55 C76,70 71,110 76,150 C56,140 51,95 60,70 Z" />
+    <!-- Cat-Eye Sunglasses / Visor Frame -->
+    <path
+        android:fillColor="#1E1C1A"
+        android:pathData="M72,85 C90,80 115,82 120,95 C124,98 128,98 132,95 C137,82 162,80 180,85 C192,89 188,115 165,118 C145,120 132,105 128,102 C124,105 111,120 91,118 C68,115 64,89 72,85 Z" />
+    <!-- Dark Glass Lenses -->
+    <path
+        android:fillColor="#3A3530"
+        android:pathData="M78,89 C95,85 112,87 116,98 C114,110 98,114 86,112 C76,110 73,95 78,89 Z" />
+    <path
+        android:fillColor="#3A3530"
+        android:pathData="M178,89 C161,85 144,87 140,98 C142,110 158,114 170,112 C180,110 183,95 178,89 Z" />
+    <!-- Glamour Red Lips -->
+    <path
+        android:fillColor="#C85A32"
+        android:pathData="M112,175 C120,168 125,172 128,170 C131,172 136,168 144,175 C148,179 140,192 128,190 C116,192 108,179 112,175 Z" />
+</vector>

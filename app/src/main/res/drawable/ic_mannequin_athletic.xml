@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="360dp"
+    android:viewportWidth="256"
+    android:viewportHeight="360">
+    <!-- Athletic Minimal Silhouette Form -->
+    <path
+        android:fillColor="#22201D"
+        android:strokeColor="#C85A32"
+        android:strokeWidth="1.5"
+        android:pathData="M114,35 L142,35 L145,65 L111,65 Z" />
+    <path
+        android:fillColor="#2D2A26"
+        android:strokeColor="#C85A32"
+        android:strokeWidth="2"
+        android:pathData="M111,65 C85,72 50,86 48,106 C46,122 62,150 72,175 C82,200 84,215 84,230 C84,248 66,275 64,295 C62,315 80,332 106,336 L150,336 C176,332 194,315 192,295 C190,275 172,248 172,230 C172,215 174,200 184,175 C194,150 210,122 208,106 C206,86 171,72 145,65 Z" />
+    <!-- Athletic Rib Contour -->
+    <path
+        android:strokeColor="#A84522"
+        android:strokeWidth="1.5"
+        android:pathData="M84,195 C105,205 151,205 172,195" />
+    <path
+        android:strokeColor="#A84522"
+        android:strokeWidth="1.5"
+        android:pathData="M84,230 C105,238 151,238 172,230" />
+</vector>

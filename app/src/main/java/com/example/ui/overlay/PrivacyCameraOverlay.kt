@@ -5,7 +5,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,13 +40,18 @@ import com.example.model.BackgroundConfig
 import com.example.model.BackgroundMode
 import com.example.model.BlurType
 import com.example.model.BundledEnvironments
+import com.example.model.BundledSwapItems
 import com.example.model.FaceStyleConfig
 import com.example.model.FilterPreset
 import com.example.model.PrivacyConfig
 import com.example.model.PrivacyMaskType
+import com.example.model.ProductCatalogConfig
+import com.example.model.StoryStreamConfig
+import com.example.model.SwapConfig
 import com.example.model.TrackedFace
 import com.example.ui.theme.CharcoalPrimary
 import com.example.ui.theme.CharcoalSecondary
+import com.example.ui.theme.CharcoalTertiary
 import com.example.ui.theme.MaskCensorCharcoal
 import com.example.ui.theme.MaskCensorTerracotta
 import com.example.ui.theme.MutedAmber
@@ -63,6 +70,9 @@ fun PrivacyCameraOverlay(
     faceStyleConfig: FaceStyleConfig,
     isPersian: Boolean,
     modifier: Modifier = Modifier,
+    storyStreamConfig: StoryStreamConfig = StoryStreamConfig(),
+    catalogConfig: ProductCatalogConfig = ProductCatalogConfig(),
+    swapConfig: SwapConfig = SwapConfig(),
     onTapAddManualZone: (Offset) -> Unit = {}
 ) {
     // Load virtual background image if selected
@@ -71,6 +81,19 @@ fun PrivacyCameraOverlay(
             ?: BundledEnvironments.items.first()
     }
     val virtualBgBitmap = ImageBitmap.imageResource(activeEnv.drawableResId)
+
+    // Load Face Swap Avatar and Body Swap Mannequin
+    val activeAvatar = remember(swapConfig.selectedAvatarId) {
+        BundledSwapItems.avatars.find { it.id == swapConfig.selectedAvatarId }
+            ?: BundledSwapItems.avatars.first()
+    }
+    val avatarBitmap = ImageBitmap.imageResource(activeAvatar.drawableResId)
+
+    val activeMannequin = remember(swapConfig.selectedBodyId) {
+        BundledSwapItems.mannequins.find { it.id == swapConfig.selectedBodyId }
+            ?: BundledSwapItems.mannequins.first()
+    }
+    val mannequinBitmap = ImageBitmap.imageResource(activeMannequin.drawableResId)
 
     Box(
         modifier = modifier
@@ -100,6 +123,21 @@ fun PrivacyCameraOverlay(
                 canvasH = canvasH,
                 styleConfig = faceStyleConfig
             )
+
+            // 2b. Render Body Swap Mannequin if enabled
+            if (swapConfig.bodySwapEnabled) {
+                val bWidth = (canvasW * 0.72f * swapConfig.bodyScale).roundToInt()
+                val bHeight = (canvasH * 0.58f * swapConfig.bodyScale).roundToInt()
+                val bLeft = ((canvasW - bWidth) / 2f).roundToInt()
+                val bTop = (canvasH * 0.36f + swapConfig.bodyOffsetY).roundToInt()
+
+                drawImage(
+                    image = mannequinBitmap,
+                    dstOffset = androidx.compose.ui.unit.IntOffset(bLeft, bTop),
+                    dstSize = androidx.compose.ui.unit.IntSize(bWidth, bHeight),
+                    alpha = swapConfig.bodyBlendAlpha
+                )
+            }
 
             // 3. Render Privacy for all detected faces
             val facesToRender = if (privacyConfig.autoFaceTracking && trackedFaces.isNotEmpty()) {
@@ -151,6 +189,21 @@ fun PrivacyCameraOverlay(
                     eyeRatio = face.eyeCenterY,
                     mouthRatio = face.mouthCenterY
                 )
+
+                // 3c. Face Swap Avatar layer
+                if (swapConfig.faceSwapEnabled) {
+                    val fLeft = faceRect.left.roundToInt()
+                    val fTop = faceRect.top.roundToInt()
+                    val fWidth = faceRect.width().roundToInt().coerceAtLeast(10)
+                    val fHeight = faceRect.height().roundToInt().coerceAtLeast(10)
+
+                    drawImage(
+                        image = avatarBitmap,
+                        dstOffset = androidx.compose.ui.unit.IntOffset(fLeft, fTop),
+                        dstSize = androidx.compose.ui.unit.IntSize(fWidth, fHeight),
+                        alpha = swapConfig.faceBlendAlpha
+                    )
+                }
             }
 
             // 4. Render Manual user-placed Privacy Zones
@@ -204,6 +257,89 @@ fun PrivacyCameraOverlay(
                         color = CharcoalPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        // 6. Live Broadcast Status Badge
+        if (storyStreamConfig.isLiveStreaming) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = 80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFC24134))
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color.White))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "LIVE • ${storyStreamConfig.selectedPlatform.displayName}",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // 7. Story Headline / Sticker Overlay
+        if (storyStreamConfig.storyHeadline.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 130.dp, start = 24.dp, end = 24.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(WarmSurface.copy(alpha = 0.94f))
+                    .border(1.dp, WarmBorder, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = storyStreamConfig.storyHeadline,
+                    color = CharcoalPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // 8. Boutique & Underwear Product Price Tag
+        if (catalogConfig.showPriceBadge) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = 100.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(WarmSurface.copy(alpha = 0.94f))
+                    .border(1.dp, WarmBorder, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = catalogConfig.productName,
+                        color = CharcoalPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = catalogConfig.price,
+                            color = TerracottaAccent,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "• ${catalogConfig.sizes}",
+                            color = CharcoalSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    Text(
+                        text = catalogConfig.telegramChannel,
+                        color = CharcoalTertiary,
+                        fontSize = 10.sp
                     )
                 }
             }

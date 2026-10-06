@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="360dp"
+    android:viewportWidth="256"
+    android:viewportHeight="360">
+    <!-- Tailor Dress Form (Vintage Linen & Black Stand) -->
+    <!-- Wooden Finial Cap -->
+    <path
+        android:fillColor="#5A4738"
+        android:pathData="M123,10 C123,5 133,5 133,10 L135,25 L121,25 Z" />
+    <path
+        android:fillColor="#DDD2C2"
+        android:pathData="M115,25 L141,25 L145,55 L111,55 Z" />
+    <!-- Body Silhouette -->
+    <path
+        android:fillColor="#E6DCCE"
+        android:strokeColor="#786B5A"
+        android:strokeWidth="2"
+        android:pathData="M111,55 C88,62 58,76 56,98 C54,115 68,145 76,170 C84,195 85,210 85,225 C85,242 70,270 68,290 C66,310 82,328 108,332 L148,332 C174,328 190,310 188,290 C186,270 171,242 171,225 C171,210 172,195 180,170 C188,145 202,115 200,98 C198,76 168,62 145,55 Z" />
+    <!-- Classic Tailoring Guideline Lines -->
+    <!-- Bust Line -->
+    <path
+        android:strokeColor="#C24134"
+        android:strokeWidth="1.5"
+        android:pathData="M76,140 C105,150 151,150 180,140" />
+    <!-- Waist Line Ribbon -->
+    <path
+        android:strokeColor="#C24134"
+        android:strokeWidth="2"
+        android:pathData="M85,225 C105,232 151,232 171,225" />
+    <!-- Hip Line -->
+    <path
+        android:strokeColor="#C24134"
+        android:strokeWidth="1.5"
+        android:pathData="M68,290 C105,302 151,302 188,290" />
+    <!-- Center Guideline -->
+    <path
+        android:strokeColor="#C24134"
+        android:strokeWidth="1.5"
+        android:pathData="M128,55 L128,332" />
+    <!-- Cast Iron Stand Pole -->
+    <path
+        android:fillColor="#262320"
+        android:pathData="M124,332 L132,332 L132,358 L124,358 Z" />
+</vector>

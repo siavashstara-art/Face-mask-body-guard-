@@ -40,6 +40,15 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _performancePreset = MutableStateFlow(PerformancePreset.LOW_REDMI)
     val performancePreset: StateFlow<PerformancePreset> = _performancePreset.asStateFlow()
 
+    private val _storyStreamConfig = MutableStateFlow(StoryStreamConfig())
+    val storyStreamConfig: StateFlow<StoryStreamConfig> = _storyStreamConfig.asStateFlow()
+
+    private val _catalogConfig = MutableStateFlow(ProductCatalogConfig())
+    val catalogConfig: StateFlow<ProductCatalogConfig> = _catalogConfig.asStateFlow()
+
+    private val _swapConfig = MutableStateFlow(SwapConfig())
+    val swapConfig: StateFlow<SwapConfig> = _swapConfig.asStateFlow()
+
     private val _activeTab = MutableStateFlow(ActiveStudioTab.NONE)
     val activeTab: StateFlow<ActiveStudioTab> = _activeTab.asStateFlow()
 
@@ -90,6 +99,29 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun setPerformancePreset(preset: PerformancePreset) {
         _performancePreset.value = preset
+    }
+
+    fun updateStoryStreamConfig(config: StoryStreamConfig) {
+        _storyStreamConfig.value = config
+    }
+
+    fun updateCatalogConfig(config: ProductCatalogConfig) {
+        _catalogConfig.value = config
+    }
+
+    fun updateSwapConfig(config: SwapConfig) {
+        _swapConfig.value = config
+    }
+
+    fun toggleLiveStream() {
+        val current = _storyStreamConfig.value
+        val newState = !current.isLiveStreaming
+        _storyStreamConfig.value = current.copy(isLiveStreaming = newState)
+        _statusMessage.value = if (newState) {
+            if (_isPersian.value) "اتصال پخش زنده به ${current.selectedPlatform.displayName} برقرار شد" else "Connected to ${current.selectedPlatform.displayName}"
+        } else {
+            if (_isPersian.value) "پخش زنده متوقف شد" else "Live stream ended"
+        }
     }
 
     fun setActiveTab(tab: ActiveStudioTab) {

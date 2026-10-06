@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Clean Minimalist Studio Mannequin Head -->
+    <!-- Head Base -->
+    <path
+        android:fillColor="#EFECE6"
+        android:strokeColor="#D4CEC4"
+        android:strokeWidth="2"
+        android:pathData="M75,80 C75,35 181,35 181,80 C181,145 168,215 128,235 C88,215 75,145 75,80 Z" />
+    <!-- Facial Plane Shading (Left cheek contour) -->
+    <path
+        android:fillColor="#E3DDD3"
+        android:pathData="M75,80 C75,145 88,215 128,235 C120,200 110,140 110,95 C110,60 120,40 128,35 C95,35 75,55 75,80 Z" />
+    <!-- Abstract Eye Indentations -->
+    <path
+        android:fillColor="#C8C1B5"
+        android:pathData="M88,105 C98,100 112,100 116,108 C112,112 98,112 88,105 Z" />
+    <path
+        android:fillColor="#C8C1B5"
+        android:pathData="M168,105 C158,100 144,100 140,108 C144,112 158,112 168,105 Z" />
+    <!-- Minimal Nose Ridge -->
+    <path
+        android:strokeColor="#C0B8AC"
+        android:strokeWidth="2"
+        android:pathData="M128,108 L126,150 L134,152" />
+    <!-- Sculpted Lip Line -->
+    <path
+        android:fillColor="#C8C1B5"
+        android:pathData="M115,182 C124,178 132,178 141,182 C132,185 124,185 115,182 Z" />
+</vector>

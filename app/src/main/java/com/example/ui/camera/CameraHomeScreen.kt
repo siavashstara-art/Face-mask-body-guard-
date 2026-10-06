@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +40,9 @@ fun CameraHomeScreen(
     val silhouetteConfig by viewModel.silhouetteConfig.collectAsStateWithLifecycle()
     val voiceConfig by viewModel.voiceConfig.collectAsStateWithLifecycle()
     val performancePreset by viewModel.performancePreset.collectAsStateWithLifecycle()
+    val storyStreamConfig by viewModel.storyStreamConfig.collectAsStateWithLifecycle()
+    val catalogConfig by viewModel.catalogConfig.collectAsStateWithLifecycle()
+    val swapConfig by viewModel.swapConfig.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
     val trackedFaces by viewModel.trackedFaces.collectAsStateWithLifecycle()
     val cameraSelector by viewModel.cameraSelector.collectAsStateWithLifecycle()
@@ -81,6 +85,9 @@ fun CameraHomeScreen(
             backgroundConfig = bgConfig,
             faceStyleConfig = faceStyleConfig,
             isPersian = isPersian,
+            storyStreamConfig = storyStreamConfig,
+            catalogConfig = catalogConfig,
+            swapConfig = swapConfig,
             onTapAddManualZone = { offset ->
                 viewModel.addManualPrivacyZone(offset, overlayWidth, overlayHeight)
             },
@@ -300,6 +307,22 @@ fun CameraHomeScreen(
                             isPersian = isPersian,
                             onUpdate = { viewModel.updateVoiceConfig(it) }
                         )
+                        ActiveStudioTab.SWAP -> FaceBodySwapPanel(
+                            config = swapConfig,
+                            isPersian = isPersian,
+                            onUpdate = { viewModel.updateSwapConfig(it) }
+                        )
+                        ActiveStudioTab.STORY_STREAM -> StoryLiveStudioPanel(
+                            config = storyStreamConfig,
+                            isPersian = isPersian,
+                            onUpdate = { viewModel.updateStoryStreamConfig(it) },
+                            onToggleStream = { viewModel.toggleLiveStream() }
+                        )
+                        ActiveStudioTab.CATALOG -> CatalogStudioPanel(
+                            config = catalogConfig,
+                            isPersian = isPersian,
+                            onUpdate = { viewModel.updateCatalogConfig(it) }
+                        )
                         ActiveStudioTab.SETTINGS -> SettingsPerformancePanel(
                             preset = performancePreset,
                             isPersian = isPersian,
@@ -323,22 +346,25 @@ fun CameraHomeScreen(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Studio Tab Selector Row
-                Row(
+                // Studio Tab Selector Row (Scrollable LazyRow for easy touch access)
+                val tabs = listOf(
+                    Triple(ActiveStudioTab.PRIVACY, if (isPersian) "حریم خصوصی" else "Privacy", Icons.Default.Shield),
+                    Triple(ActiveStudioTab.BACKGROUND, if (isPersian) "پس‌زمینه" else "Background", Icons.Default.Landscape),
+                    Triple(ActiveStudioTab.STYLE, if (isPersian) "استایل" else "Style", Icons.Default.AutoAwesome),
+                    Triple(ActiveStudioTab.BODY, if (isPersian) "اندام" else "Body", Icons.Default.AccessibilityNew),
+                    Triple(ActiveStudioTab.VOICE, if (isPersian) "صدا" else "Voice", Icons.Default.Mic),
+                    Triple(ActiveStudioTab.SWAP, if (isPersian) "سواپ چهره/مانکن" else "Swap", Icons.Default.SwitchAccount),
+                    Triple(ActiveStudioTab.STORY_STREAM, if (isPersian) "استوری/پخش" else "Live/Story", Icons.Default.Podcasts),
+                    Triple(ActiveStudioTab.CATALOG, if (isPersian) "کاتالوگ فروش" else "Catalog", Icons.Default.ShoppingBag),
+                    Triple(ActiveStudioTab.SETTINGS, if (isPersian) "تنظیمات" else "Settings", Icons.Default.Tune)
+                )
+
+                androidx.compose.foundation.lazy.LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val tabs = listOf(
-                        Triple(ActiveStudioTab.PRIVACY, if (isPersian) "حریم خصوصی" else "Privacy", Icons.Default.Shield),
-                        Triple(ActiveStudioTab.BACKGROUND, if (isPersian) "پس‌زمینه" else "Background", Icons.Default.Landscape),
-                        Triple(ActiveStudioTab.STYLE, if (isPersian) "استایل" else "Style", Icons.Default.AutoAwesome),
-                        Triple(ActiveStudioTab.BODY, if (isPersian) "اندام" else "Body", Icons.Default.AccessibilityNew),
-                        Triple(ActiveStudioTab.VOICE, if (isPersian) "صدا" else "Voice", Icons.Default.Mic),
-                        Triple(ActiveStudioTab.SETTINGS, if (isPersian) "تنظیمات" else "Settings", Icons.Default.Tune)
-                    )
-
-                    tabs.forEach { (tab, title, icon) ->
+                    items(tabs) { (tab, title, icon) ->
                         val isSelected = activeTab == tab
                         Surface(
                             color = if (isSelected) TerracottaAccent else WarmSurface.copy(alpha = 0.92f),
@@ -352,7 +378,7 @@ fun CameraHomeScreen(
                                 .padding(2.dp)
                         ) {
                             Column(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Icon(

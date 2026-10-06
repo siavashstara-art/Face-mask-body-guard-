@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="360dp"
+    android:viewportWidth="256"
+    android:viewportHeight="360">
+    <!-- Boutique Commercial Mannequin Torso & Hips -->
+    <!-- Neck -->
+    <path
+        android:fillColor="#DDD6CC"
+        android:strokeColor="#C5BCB0"
+        android:strokeWidth="1.5"
+        android:pathData="M115,20 L141,20 L144,55 L112,55 Z" />
+    <path
+        android:fillColor="#AFA598"
+        android:pathData="M114,18 C114,12 142,12 142,18 C142,22 114,22 114,18 Z" />
+    <!-- Torso (Shoulders, Bust, Narrow Waist, Hips) -->
+    <path
+        android:fillColor="#EBE5DB"
+        android:strokeColor="#C5BCB0"
+        android:strokeWidth="2"
+        android:pathData="M112,55 C90,60 55,75 52,95 C50,110 65,145 75,165 C85,185 86,195 86,215 C86,235 68,265 65,285 C62,305 78,325 105,330 L151,330 C178,325 194,305 191,285 C188,265 170,235 170,215 C170,195 171,185 181,165 C191,145 206,110 204,95 C201,75 166,60 144,55 Z" />
+    <!-- Torso Center Seam -->
+    <path
+        android:strokeColor="#C5BCB0"
+        android:strokeWidth="1.5"
+        android:pathData="M128,55 L128,330" />
+    <!-- Subtle Waist Line -->
+    <path
+        android:strokeColor="#D4CCC0"
+        android:strokeWidth="1"
+        android:pathData="M86,215 C105,222 151,222 170,215" />
+    <!-- Stand Pole -->
+    <path
+        android:fillColor="#8C8275"
+        android:pathData="M124,330 L132,330 L132,358 L124,358 Z" />
+</vector>
