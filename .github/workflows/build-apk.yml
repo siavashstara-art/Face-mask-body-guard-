@@ -37,7 +37,7 @@ jobs:
 
       - name: Setup Keystores (Debug and Release)
         run: |
-          # 1. بازسازی فایل debug.keystore از روی base64 برای بیلد Debug
+          # 1. Setup debug.keystore from base64 (required by assembleDebug)
           if [ -f "debug.keystore.base64" ]; then
             echo "Restoring debug.keystore from debug.keystore.base64..."
             base64 -d debug.keystore.base64 > debug.keystore
@@ -46,7 +46,7 @@ jobs:
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-          # 2. آماده‌سازی کلید امضای Release برای ساخت AAB و Release APK
+          # 2. Setup release keystore (required by bundleRelease and assembleRelease)
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
             echo "Using custom release keystore from GitHub Secrets..."
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-upload-key.jks
