@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.model.AppLanguage
 import com.example.ui.camera.CameraHomeScreen
+import com.example.ui.facecard.FaceCardMainHostScreen
 import com.example.ui.gallery.OfflineVideoLabScreen
 import com.example.ui.permissions.CameraPermissionScreen
 import com.example.ui.stealth.StealthCalculatorScreen
@@ -74,14 +75,20 @@ class MainActivity : ComponentActivity() {
                                         "gallery" -> OfflineVideoLabScreen(
                                             storageManager = viewModel.storageManager,
                                             isPersian = appLanguage == AppLanguage.PERSIAN,
-                                            onNavigateBack = { viewModel.navigateTo("camera") }
+                                            onNavigateBack = { viewModel.navigateTo("facecard") }
                                         )
-                                        else -> CameraHomeScreen(
+                                        "camera" -> CameraHomeScreen(
                                             viewModel = viewModel,
                                             onNavigateToGallery = { viewModel.navigateTo("gallery") },
                                             isInPipMode = isPip,
                                             onEnterPip = { enterStudioPipMode() },
-                                            onTriggerStealth = { isStealthCalculatorActive = true }
+                                            onTriggerStealth = { isStealthCalculatorActive = true },
+                                            onNavigateBackToFaceCard = { viewModel.navigateTo("facecard") }
+                                        )
+                                        else -> FaceCardMainHostScreen(
+                                            viewModel = viewModel,
+                                            onNavigateToStudio = { viewModel.navigateTo("camera") },
+                                            onNavigateToGallery = { viewModel.navigateTo("gallery") }
                                         )
                                     }
                                 }

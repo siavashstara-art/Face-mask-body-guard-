@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">FaceGuard</string>
-    <string name="app_full_name">FaceGuard Studio — Private Offline Camera</string>
+    <string name="app_name">FaceCard</string>
+    <string name="app_full_name">FaceCard — Smart Digital Identity &amp; Loyalty Hub</string>
     <string name="privacy_offline_badge">OFFLINE PROCESSING • ZERO CLOUD • PRIVACY GUARD</string>
     <string name="privacy_offline_desc">All biometric masks, blur, segmentation, and voice modulation run 100% on your device. No cloud storage, no remote servers, no telemetry.</string>
     <string name="grant_permissions">Grant Camera &amp; Audio Permissions</string>

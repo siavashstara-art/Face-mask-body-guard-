@@ -20,6 +20,7 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     val storageManager = StorageManager(application)
     val recordingEngine = RecordingEngine(application, storageManager)
     val faceDetectionEngine = FaceDetectionEngine()
+    val faceCardRepo = com.example.engine.FaceCardRepository(application)
 
     // Config states
     private val _privacyConfig = MutableStateFlow(PrivacyConfig())
@@ -88,8 +89,15 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _showPrivacyAudit = MutableStateFlow(false)
     val showPrivacyAudit: StateFlow<Boolean> = _showPrivacyAudit.asStateFlow()
 
-    private val _currentScreen = MutableStateFlow("camera") // "camera" or "gallery"
+    private val _currentScreen = MutableStateFlow("facecard") // "facecard", "camera", "gallery"
     val currentScreen: StateFlow<String> = _currentScreen.asStateFlow()
+
+    private val _faceCardTab = MutableStateFlow("cards") // "cards", "loyalty", "ecosystem"
+    val faceCardTab: StateFlow<String> = _faceCardTab.asStateFlow()
+
+    fun selectFaceCardTab(tab: String) {
+        _faceCardTab.value = tab
+    }
 
     // Status snackbar/toast
     private val _statusMessage = MutableStateFlow<String?>(null)

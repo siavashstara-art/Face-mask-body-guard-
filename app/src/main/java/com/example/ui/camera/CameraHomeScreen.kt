@@ -36,7 +36,8 @@ fun CameraHomeScreen(
     onNavigateToGallery: () -> Unit,
     isInPipMode: Boolean = false,
     onEnterPip: () -> Unit = {},
-    onTriggerStealth: () -> Unit = {}
+    onTriggerStealth: () -> Unit = {},
+    onNavigateBackToFaceCard: () -> Unit = {}
 ) {
     val privacyConfig by viewModel.privacyConfig.collectAsStateWithLifecycle()
     val bgConfig by viewModel.backgroundConfig.collectAsStateWithLifecycle()
@@ -167,11 +168,27 @@ fun CameraHomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Group: AI Status + Simple Mode Pill
+                // Left Group: Back to Cards + AI Status + Simple Mode Pill
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Back to FaceCard Dashboard
+                    IconButton(
+                        onClick = onNavigateBackToFaceCard,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(WarmSurface.copy(alpha = 0.92f), CircleShape)
+                            .border(1.dp, WarmBorder, CircleShape)
+                    ) {
+                        Icon(
+                            Icons.Default.CreditCard,
+                            contentDescription = "Back to FaceCard",
+                            tint = TerracottaAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
                     // Hybrid AI Status Badge (Offline Local vs Online Cloud)
                     val isOfflineAi = swapConfig.aiExecutionMode == AiEngineExecutionMode.OFFLINE_EDGE_LOCAL
                     Surface(
