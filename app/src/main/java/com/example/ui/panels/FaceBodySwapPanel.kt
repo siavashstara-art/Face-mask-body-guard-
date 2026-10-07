@@ -118,7 +118,7 @@ fun FaceBodySwapPanel(
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    text = if (isPersian) "آفلاین (معمولی)" else "Offline (Normal)",
+                                    text = if (isPersian) "تماماً آفلاین (بدون اینترنت)" else "100% Offline (Local)",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (isOffline) SageGreen else CharcoalPrimary
@@ -126,7 +126,7 @@ fun FaceBodySwapPanel(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = if (isPersian) "۱۰۰٪ روی گوشی، بدون مصرف نت، سریع و امن روی ردمی نوت ۸" else "Runs on-device with zero data usage",
+                                text = if (isPersian) "نقاب‌ها، برقع، مات‌سازی، میوت صدا و اصلاح اندام بدون ۱ بایت اینترنت روی گوشی کار می‌کنند." else "All masks, audio mute, and body tools run strictly offline.",
                                 fontSize = 10.sp,
                                 color = CharcoalSecondary,
                                 lineHeight = 14.sp
@@ -134,7 +134,7 @@ fun FaceBodySwapPanel(
                         }
                     }
 
-                    // Online Mode Chip
+                    // Online Mode Chip (The ONLY online feature)
                     val isOnline = config.aiExecutionMode == AiEngineExecutionMode.ONLINE_CLOUD_HYBRID
                     Surface(
                         color = if (isOnline) TerracottaSubtle else WarmSurface,
@@ -159,7 +159,7 @@ fun FaceBodySwapPanel(
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    text = if (isPersian) "آنلاین ابری" else "Online Cloud",
+                                    text = if (isPersian) "آنلاین ابری (ویژه سالن)" else "Online Salon Cloud",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (isOnline) TerracottaAccent else CharcoalPrimary
@@ -167,12 +167,45 @@ fun FaceBodySwapPanel(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = if (isPersian) "کیفیت فوتورئال و مدل‌های نامحدود با اتصال اینترنت" else "Photorealistic models via cloud sync",
+                                text = if (isPersian) "تنها قابلیت آنلاین: تعویض چهره مشتری با چهره مجازی جهت آرشیو سالن و ژورنال" else "Only online feature: Generates synthetic faces for salon archive.",
                                 fontSize = 10.sp,
                                 color = CharcoalSecondary,
                                 lineHeight = 14.sp
                             )
                         }
+                    }
+                }
+
+                // Dedicated Salon Explanatory Banner
+                Surface(
+                    color = WarmSurfaceVariant,
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder.copy(alpha = 0.5f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            Icons.Default.FaceRetouchingNatural,
+                            contentDescription = null,
+                            tint = TerracottaAccent,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .padding(top = 2.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = if (isPersian)
+                                "💡 ویژه مدیران سالن زیبایی: وقتی مو و صورت مشتری را درست کرده‌اید اما او اجازه انتشار چهره نمی‌دهد، با اتصال به اینترنت چهره او با یک چهره مجازی و غیرواقعی هوش مصنوعی جایگزین می‌شود؛ اما مدل مو، شینیون، اتو، رنگ و هنر دست شما کاملاً دست‌نخورده در عکس و آرشیو باقی می‌ماند. بدون اینترنت نیز تمام نقاب‌ها و امکانات آفلاین در دسترس هستند."
+                            else
+                                "Salon Archiving Note: If a client declines face exposure, online AI generates a synthetic virtual face while keeping their ironed hair, curls, and styling 100% intact.",
+                            fontSize = 11.sp,
+                            color = CharcoalPrimary,
+                            lineHeight = 16.sp
+                        )
                     }
                 }
             }
@@ -493,6 +526,107 @@ fun FaceBodySwapPanel(
                             value = config.bodyBlendAlpha,
                             onValueChange = { onUpdate(config.copy(bodyBlendAlpha = it)) },
                             valueRange = 0.4f..1.0f,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                        )
+                    }
+
+                    HorizontalDivider(color = WarmBorderSubtle)
+
+                    // 1. Shelf-Butt Contour (طاقچه‌ای و گرد کردن باسن بدون چاقی بی‌ریخت)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (isPersian) "🍑 فرم‌دهی گرد و طاقچه‌ای باسن (Shelf Butt):" else "🍑 Brazilian Shelf-Butt Contour:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = CharcoalPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${(config.shelfButtContour * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TerracottaAccent,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Slider(
+                            value = config.shelfButtContour,
+                            onValueChange = { onUpdate(config.copy(shelfButtContour = it)) },
+                            valueRange = 0.5f..1.5f,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "بدون چاقی بی‌ریخت یا افتادگی؛ باسن کاملاً گرد، سفت و طاقچه‌ای از بالا لیفت می‌شود تا تن‌خور لباس شب و لباس زیر بی‌نقص شود."
+                            else
+                                "Sculpts high round shelf curvature without bulky fat, lifting upwards for flawless gown/swimwear fit.",
+                            fontSize = 10.sp,
+                            color = CharcoalSecondary,
+                            lineHeight = 14.sp
+                        )
+                    }
+
+                    // 2. Sculpted Bust Lift (لیفت و فرم‌دهی جذاب و مشتری‌پسند سینه)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (isPersian) "✨ لیفت و برجسته‌سازی شکیل سینه (Bust Lift):" else "✨ Sculpted Lifted Bust Contour:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = CharcoalPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${(config.bustLiftFirmness * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TerracottaAccent,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Slider(
+                            value = config.bustLiftFirmness,
+                            onValueChange = { onUpdate(config.copy(bustLiftFirmness = it)) },
+                            valueRange = 0.5f..1.5f,
+                            colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "لیفت رو به بالا و متقارن کردن سینه مخصوص یقه‌های دکلته لباس عروس و ست‌های کاپ‌دار لباس زیر."
+                            else
+                                "Perky upward cleavage sculpting tailored for decollete bridal gowns and luxury lingerie cups.",
+                            fontSize = 10.sp,
+                            color = CharcoalSecondary,
+                            lineHeight = 14.sp
+                        )
+                    }
+
+                    // 3. Waist Snatch (کمر باریک ساعت شنی)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (isPersian) "⏳ باریک‌سازی کمر زنبوری (Waist Snatch):" else "⏳ Hourglass Snapped Waist:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = CharcoalPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${(config.waistTaperRatio * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TerracottaAccent,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Slider(
+                            value = config.waistTaperRatio,
+                            onValueChange = { onUpdate(config.copy(waistTaperRatio = it)) },
+                            valueRange = 0.5f..1.0f,
                             colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
                         )
                     }

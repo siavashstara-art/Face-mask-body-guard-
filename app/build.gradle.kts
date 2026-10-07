@@ -1,11 +1,11 @@
-import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+// import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   // alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.secrets)
-  alias(libs.plugins.google.services)
+  // alias(libs.plugins.google.services)
 }
 
 android {
@@ -15,7 +15,7 @@ android {
   defaultConfig {
     applicationId = "com.tavana.faceguard"
     minSdk = 24
-    targetSdk = 36
+    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
@@ -29,12 +29,16 @@ android {
       storePassword = System.getenv("STORE_PASSWORD")
       keyAlias = "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
+      enableV1Signing = true
+      enableV2Signing = true
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
       storePassword = "android"
       keyAlias = "androiddebugkey"
       keyPassword = "android"
+      enableV1Signing = true
+      enableV2Signing = true
     }
   }
 
@@ -70,13 +74,12 @@ secrets {
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
 }
 
-googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
+// googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
 
-// Some unused dependencies are commented out below instead of being removed.
-// This makes it easy to add them back in the future if needed.
+// Some unused dependencies are commented out below to optimize APK size and ensure compatibility.
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
-  implementation(platform(libs.firebase.bom))
+  // implementation(platform(libs.firebase.bom))
   implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.camera.camera2)
@@ -99,26 +102,22 @@ dependencies {
   // implementation(libs.androidx.room.ktx)
   // implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
-  implementation(libs.converter.moshi)
-  implementation(libs.firebase.ai)
-  // Uncomment to use Firestore:
+  // implementation(libs.converter.moshi)
+  // implementation(libs.firebase.ai)
   // implementation(libs.firebase.firestore)
-
-  // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
-  // Sign-In via Credential Manager:
   // implementation(libs.firebase.auth)
   // implementation(libs.androidx.credentials)
   // implementation(libs.androidx.credentials.play.services)
   // implementation(libs.googleid)
-  implementation(libs.firebase.appcheck.recaptcha)
-  implementation(libs.firebase.appcheck.debug)
+  // implementation(libs.firebase.appcheck.recaptcha)
+  // implementation(libs.firebase.appcheck.debug)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.logging.interceptor)
-  implementation(libs.moshi.kotlin)
-  implementation(libs.okhttp)
+  // implementation(libs.logging.interceptor)
+  // implementation(libs.moshi.kotlin)
+  // implementation(libs.okhttp)
   // implementation(libs.play.services.location)
-  implementation(libs.retrofit)
+  // implementation(libs.retrofit)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

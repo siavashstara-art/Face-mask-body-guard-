@@ -35,6 +35,13 @@ fun CameraPermissionScreen(
         )
     )
 
+    // تقاضای خودکار دسترسی بدون معطلی در لحظه ورود به برنامه (Zero-click prompt)
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!permissionState.allPermissionsGranted) {
+            permissionState.launchMultiplePermissionRequest()
+        }
+    }
+
     if (permissionState.allPermissionsGranted) {
         onPermissionsGranted()
     } else {

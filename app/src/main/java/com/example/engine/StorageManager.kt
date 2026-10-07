@@ -19,7 +19,8 @@ class StorageManager(private val context: Context) {
 
     private val videosDir: File
         get() {
-            val dir = File(context.getExternalFilesDir(null), "faceguard_videos")
+            val base = context.getExternalFilesDir(null) ?: context.filesDir
+            val dir = File(base, "faceguard_videos")
             if (!dir.exists()) {
                 dir.mkdirs()
             }

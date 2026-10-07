@@ -129,7 +129,7 @@ fun PrivacyCameraOverlay(
                 styleConfig = faceStyleConfig
             )
 
-            // 2b. Render Body Swap Mannequin if enabled
+            // 2b. Render Body Swap Mannequin if enabled (فرم طاقچه‌ای گرد باسن و لیفت سینه)
             if (swapConfig.bodySwapEnabled) {
                 val bWidth = (canvasW * 0.72f * swapConfig.bodyScale).roundToInt()
                 val bHeight = (canvasH * 0.58f * swapConfig.bodyScale).roundToInt()
@@ -142,6 +142,53 @@ fun PrivacyCameraOverlay(
                     dstSize = androidx.compose.ui.unit.IntSize(bWidth, bHeight),
                     alpha = swapConfig.bodyBlendAlpha
                 )
+
+                // Sculpted Shelf-Butt and Bust Lift accent highlights if configured
+                if (swapConfig.shelfButtContour > 0.8f || swapConfig.bustLiftFirmness > 0.8f) {
+                    val hipCenterY = bTop + bHeight * 0.74f
+                    val bustCenterY = bTop + bHeight * 0.30f
+                    val centerX = canvasW / 2f
+                    val hipSpan = (bWidth * 0.44f * swapConfig.shelfButtContour).coerceAtMost(bWidth * 0.52f)
+                    val bustSpan = (bWidth * 0.38f * swapConfig.bustLiftFirmness).coerceAtMost(bWidth * 0.48f)
+
+                    // Bust Lift Firmness curve (لیفت سینه به سمت بالا)
+                    if (swapConfig.bustLiftFirmness > 0.8f) {
+                        val bustColor = TerracottaAccent.copy(alpha = (0.28f * swapConfig.bodyBlendAlpha).coerceIn(0.1f, 0.4f))
+                        drawArc(
+                            color = bustColor,
+                            startAngle = 10f,
+                            sweepAngle = 160f,
+                            useCenter = false,
+                            topLeft = Offset(centerX - bustSpan, bustCenterY - 14f),
+                            size = Size(bustSpan, 28f),
+                            style = Stroke(width = 2.2f)
+                        )
+                        drawArc(
+                            color = bustColor,
+                            startAngle = 10f,
+                            sweepAngle = 160f,
+                            useCenter = false,
+                            topLeft = Offset(centerX, bustCenterY - 14f),
+                            size = Size(bustSpan, 28f),
+                            style = Stroke(width = 2.2f)
+                        )
+                    }
+
+                    // Shelf-Butt High Brazilian Contour curve (طاقچه‌ای و گرد کردن باسن)
+                    if (swapConfig.shelfButtContour > 0.8f) {
+                        val hipColor = TerracottaAccent.copy(alpha = (0.32f * swapConfig.bodyBlendAlpha).coerceIn(0.1f, 0.45f))
+                        // Shelf ledge (خط بالای طاقچه)
+                        drawArc(
+                            color = hipColor,
+                            startAngle = 190f,
+                            sweepAngle = 160f,
+                            useCenter = false,
+                            topLeft = Offset(centerX - hipSpan, hipCenterY - 18f),
+                            size = Size(hipSpan * 2f, 36f),
+                            style = Stroke(width = 2.5f)
+                        )
+                    }
+                }
             }
 
             // 3. Render Privacy for all detected faces
@@ -168,6 +215,27 @@ fun PrivacyCameraOverlay(
                 val bottom = (centerY + faceH / 2f).coerceAtMost(canvasH)
 
                 val faceRect = RectF(left, top, right, bottom)
+
+                // 2b. Live Beauty Retouch & Blemish Removal (رتوش، حذف جوش، کک و مک، لک و پیسی)
+                if (faceStyleConfig.blemishRemoval > 0.05f || faceStyleConfig.skinSmoothing > 0.05f || faceStyleConfig.skinToneBalance != 0f) {
+                    drawFacialBeautyAndBlemishTreatment(
+                        rect = faceRect,
+                        blemishRemoval = faceStyleConfig.blemishRemoval,
+                        skinSmoothing = faceStyleConfig.skinSmoothing,
+                        skinToneBalance = faceStyleConfig.skinToneBalance
+                    )
+                }
+
+                // 2c. Digital Makeup: Lip Tint & Blush (آرایش لب و رژگونه)
+                if (faceStyleConfig.lipTintIntensity > 0.05f || faceStyleConfig.blushIntensity > 0.05f) {
+                    drawDigitalMakeup(
+                        rect = faceRect,
+                        eyeRatio = face.eyeCenterY,
+                        mouthRatio = face.mouthCenterY,
+                        lipTint = faceStyleConfig.lipTintIntensity,
+                        blush = faceStyleConfig.blushIntensity
+                    )
+                }
 
                 // 3a. Blur / Pixelation layer
                 when (privacyConfig.blurType) {
@@ -459,6 +527,40 @@ private fun DrawScope.renderStyleFilter(
                 color = Color(0xFFF0A060).copy(alpha = 0.08f * (1f + styleConfig.warmth))
             )
         }
+        FilterPreset.BRONZE_GLOW -> {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0xFFD49A6A).copy(alpha = 0.15f),
+                        Color(0xFFB87333).copy(alpha = 0.12f)
+                    )
+                )
+            )
+        }
+        FilterPreset.PORCELAIN_BRIGHT -> {
+            drawRect(
+                brush = Brush.radialGradient(
+                    listOf(
+                        Color(0xFFFFFFFF).copy(alpha = 0.12f),
+                        Color(0xFFF5F0FF).copy(alpha = 0.06f)
+                    ),
+                    center = Offset(canvasW / 2f, canvasH * 0.4f),
+                    radius = canvasW * 0.8f
+                )
+            )
+        }
+        FilterPreset.GLAMOUR_STUDIO -> {
+            drawRect(
+                brush = Brush.radialGradient(
+                    listOf(
+                        Color(0xFFFFE4E1).copy(alpha = 0.10f),
+                        Color(0xFF800020).copy(alpha = 0.05f)
+                    ),
+                    center = Offset(canvasW / 2f, canvasH * 0.4f),
+                    radius = canvasW * 0.9f
+                )
+            )
+        }
         FilterPreset.COOL_CYBER -> {
             drawRect(
                 brush = Brush.verticalGradient(
@@ -739,5 +841,335 @@ private fun DrawScope.drawPrivacyMask(
                 style = Stroke(width = 1f)
             )
         }
+
+        // ۱. نقاب سنتی برقع بندری (طلایی و مشکی اصیل هرمزگان/جنوب)
+        PrivacyMaskType.BANDARI_BURQA -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val burqaWidth = rw * 0.95f
+            val burqaTop = eyeCenterY - rh * 0.12f
+            val burqaBottom = rect.bottom - rh * 0.05f
+
+            // پیشانی‌بند و تیغه عمودی برقع
+            val burqaPath = Path().apply {
+                moveTo(cx, burqaTop)
+                lineTo(cx + burqaWidth * 0.5f, burqaTop + rh * 0.08f)
+                lineTo(cx + burqaWidth * 0.45f, eyeCenterY + rh * 0.15f)
+                lineTo(cx + burqaWidth * 0.35f, burqaBottom)
+                lineTo(cx, burqaBottom - rh * 0.02f)
+                lineTo(cx - burqaWidth * 0.35f, burqaBottom)
+                lineTo(cx - burqaWidth * 0.45f, eyeCenterY + rh * 0.15f)
+                lineTo(cx - burqaWidth * 0.5f, burqaTop + rh * 0.08f)
+                close()
+            }
+            // رنگ طلایی/مشکی زربافت برقع
+            drawPath(
+                path = burqaPath,
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF2E2416).copy(alpha = 0.96f),
+                        Color(0xFF5A4422).copy(alpha = 0.94f),
+                        Color(0xFF1E1710).copy(alpha = 0.98f)
+                    )
+                )
+            )
+            // نوار طلا و خط برجسته سنتی بندری
+            drawPath(
+                path = burqaPath,
+                color = Color(0xFFD4AF37),
+                style = Stroke(width = 2.5f)
+            )
+            // تیغه چوبی/فلزی روی بینی برقع
+            drawLine(
+                color = Color(0xFFD4AF37),
+                start = Offset(cx, burqaTop),
+                end = Offset(cx, burqaBottom),
+                strokeWidth = 3f
+            )
+        }
+
+        // ۲. نقاب نفتی خلیجی (عربی شیک با روبند تیره)
+        PrivacyMaskType.KHALIJI_NIQAB -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val niqabTop = eyeCenterY + rh * 0.08f
+            val niqabBottom = rect.bottom + rh * 0.12f
+            val nWidth = rw * 1.15f
+            val nLeft = rect.left - rw * 0.075f
+
+            // پارچه تیره نفتی مجلل با سایه
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF1C1917).copy(alpha = 0.97f),
+                        Color(0xFF292524).copy(alpha = 0.95f),
+                        Color(0xFF0C0A09).copy(alpha = 0.98f)
+                    )
+                ),
+                topLeft = Offset(nLeft, niqabTop),
+                size = Size(nWidth, niqabBottom - niqabTop),
+                cornerRadius = CornerRadius(12f, 12f)
+            )
+            // حاشیه طلایی خلیجی بالای نقاب
+            drawLine(
+                brush = Brush.horizontalGradient(
+                    listOf(Color(0xFFC5A059), Color(0xFFF3E5AB), Color(0xFFC5A059))
+                ),
+                start = Offset(nLeft, niqabTop),
+                end = Offset(nLeft + nWidth, niqabTop),
+                strokeWidth = 2.5f
+            )
+        }
+
+        // ۳. تاج فانتزی پرنسسی روی سر مدل (حفظ پرستیژ و زیبایی ژورنالی)
+        PrivacyMaskType.FANTASY_CROWN -> {
+            val cx = rect.centerX()
+            val crownWidth = rw * 0.75f
+            val crownBaseY = rect.top - rh * 0.02f
+            val crownHeight = rh * 0.32f
+            val crownPeakY = crownBaseY - crownHeight
+
+            val crownPath = Path().apply {
+                moveTo(cx - crownWidth / 2f, crownBaseY)
+                lineTo(cx - crownWidth / 2f, crownBaseY - crownHeight * 0.6f)
+                lineTo(cx - crownWidth * 0.25f, crownBaseY - crownHeight * 0.3f)
+                lineTo(cx, crownPeakY) // قله وسط
+                lineTo(cx + crownWidth * 0.25f, crownBaseY - crownHeight * 0.3f)
+                lineTo(cx + crownWidth / 2f, crownBaseY - crownHeight * 0.6f)
+                lineTo(cx + crownWidth / 2f, crownBaseY)
+                close()
+            }
+            drawPath(
+                path = crownPath,
+                brush = Brush.verticalGradient(
+                    listOf(Color(0xFFFFDF73), Color(0xFFD4AF37), Color(0xFFA67C1E))
+                )
+            )
+            drawPath(
+                path = crownPath,
+                color = Color(0xFFFFF4D0),
+                style = Stroke(width = 2f)
+            )
+            // نگین‌های الماس فانتزی روی ۵ قله
+            drawCircle(Color(0xFF80D8FF), radius = 5f, center = Offset(cx, crownPeakY))
+            drawCircle(Color(0xFFFF80AB), radius = 4f, center = Offset(cx - crownWidth / 2f, crownBaseY - crownHeight * 0.6f))
+            drawCircle(Color(0xFFFF80AB), radius = 4f, center = Offset(cx + crownWidth / 2f, crownBaseY - crownHeight * 0.6f))
+        }
+
+        // ۴. ماسک بالماسکه مجلل و پردار (کارناوال ونیزی و مدلینگ لاکچری)
+        PrivacyMaskType.MASQUERADE_BALL -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val mWidth = rw * 1.1f
+            val mHeight = rh * 0.38f
+            val mTop = eyeCenterY - mHeight * 0.5f
+
+            val maskPath = Path().apply {
+                moveTo(cx, eyeCenterY - mHeight * 0.15f) // پل بینی
+                cubicTo(
+                    cx - mWidth * 0.25f, mTop,
+                    rect.left - rw * 0.1f, mTop - rh * 0.05f,
+                    rect.left - rw * 0.08f, eyeCenterY + mHeight * 0.4f
+                )
+                cubicTo(
+                    cx - mWidth * 0.25f, eyeCenterY + mHeight * 0.5f,
+                    cx - mWidth * 0.1f, eyeCenterY + mHeight * 0.2f,
+                    cx, eyeCenterY + mHeight * 0.25f
+                )
+                cubicTo(
+                    cx + mWidth * 0.1f, eyeCenterY + mHeight * 0.2f,
+                    cx + mWidth * 0.25f, eyeCenterY + mHeight * 0.5f,
+                    rect.right + rw * 0.08f, eyeCenterY + mHeight * 0.4f
+                )
+                cubicTo(
+                    rect.right + rw * 0.1f, mTop - rh * 0.05f,
+                    cx + mWidth * 0.25f, mTop,
+                    cx, eyeCenterY - mHeight * 0.15f
+                )
+                close()
+            }
+            drawPath(
+                path = maskPath,
+                brush = Brush.radialGradient(
+                    listOf(Color(0xFF4A154B), Color(0xFF1E1026), Color(0xFF0F0714)),
+                    center = Offset(cx, eyeCenterY),
+                    radius = mWidth * 0.6f
+                )
+            )
+            drawPath(
+                path = maskPath,
+                color = Color(0xFFE0B0FF),
+                style = Stroke(width = 2f)
+            )
+        }
+
+        // ۵. نقاب فانتزی قلب روی چشمان مدل (عدم شناسایی چهره با استایل ترند)
+        PrivacyMaskType.HEART_EYES -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val heartRadius = rw * 0.22f
+            val leftEyeX = cx - rw * 0.22f
+            val rightEyeX = cx + rw * 0.22f
+
+            // دو قلب صورتی/سرخ روی دو چشم
+            listOf(leftEyeX, rightEyeX).forEach { eyeX ->
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFFFF4081), Color(0xFFC2185B)),
+                        center = Offset(eyeX, eyeCenterY),
+                        radius = heartRadius
+                    ),
+                    radius = heartRadius,
+                    center = Offset(eyeX, eyeCenterY)
+                )
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.8f),
+                    radius = heartRadius,
+                    center = Offset(eyeX, eyeCenterY),
+                    style = Stroke(width = 2f)
+                )
+            }
+        }
+
+        // ۶. نقاب گربه‌ای فانتزی بالماسکه (Cat Mystery)
+        PrivacyMaskType.CAT_MYSTERY -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val mWidth = rw * 1.05f
+            val mTop = eyeCenterY - rh * 0.2f
+
+            // نقاب با گوش‌های گربه در بالا
+            val catPath = Path().apply {
+                moveTo(cx, eyeCenterY - rh * 0.05f)
+                lineTo(cx - mWidth * 0.25f, mTop)
+                lineTo(cx - mWidth * 0.45f, mTop - rh * 0.2f) // گوش چپ گربه
+                lineTo(rect.left, eyeCenterY)
+                lineTo(cx - mWidth * 0.2f, eyeCenterY + rh * 0.18f)
+                lineTo(cx, eyeCenterY + rh * 0.08f)
+                lineTo(cx + mWidth * 0.2f, eyeCenterY + rh * 0.18f)
+                lineTo(rect.right, eyeCenterY)
+                lineTo(cx + mWidth * 0.45f, mTop - rh * 0.2f) // گوش راست گربه
+                lineTo(cx + mWidth * 0.25f, mTop)
+                close()
+            }
+            drawPath(
+                path = catPath,
+                color = Color(0xFF1F1D1B).copy(alpha = 0.96f)
+            )
+            drawPath(
+                path = catPath,
+                color = Color(0xFFE2C9A5),
+                style = Stroke(width = 2f)
+            )
+        }
+    }
+}
+
+// ----------------- Helper: Beauty Retouch & Blemish Eraser -----------------
+private fun DrawScope.drawFacialBeautyAndBlemishTreatment(
+    rect: RectF,
+    blemishRemoval: Float,
+    skinSmoothing: Float,
+    skinToneBalance: Float
+) {
+    val cx = rect.centerX()
+    val cy = rect.centerY()
+    val rx = rect.width() / 2f
+    val ry = rect.height() / 2f
+
+    // انتخاب تنالیته رنگ پوست: منفی = روشن و مهتابی | مثبت = برنزه خلیجی
+    val baseTone = when {
+        skinToneBalance < -0.1f -> {
+            // روشن‌کننده مهتابی
+            Color(0xFFFFF5EE).copy(alpha = 0.22f * kotlin.math.abs(skinToneBalance))
+        }
+        skinToneBalance > 0.1f -> {
+            // برنزه طلایی گرم خلیجی
+            Color(0xFFD29054).copy(alpha = 0.25f * skinToneBalance)
+        }
+        else -> Color.Transparent
+    }
+
+    if (baseTone != Color.Transparent) {
+        drawOval(
+            color = baseTone,
+            topLeft = Offset(rect.left, rect.top),
+            size = Size(rect.width(), rect.height())
+        )
+    }
+
+    // لایه لطافت، فتوشاپ و پاکسازی جای جوش و لک (Soft Focus Diffusion)
+    val diffuseAlpha = (blemishRemoval * 0.28f + skinSmoothing * 0.20f).coerceIn(0f, 0.45f)
+    if (diffuseAlpha > 0.02f) {
+        drawOval(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color(0xFFFDE8D7).copy(alpha = diffuseAlpha),
+                    Color(0xFFE8C8B0).copy(alpha = diffuseAlpha * 0.6f),
+                    Color.Transparent
+                ),
+                center = Offset(cx, cy),
+                radius = rx.coerceAtLeast(ry)
+            ),
+            topLeft = Offset(rect.left, rect.top),
+            size = Size(rect.width(), rect.height())
+        )
+    }
+}
+
+// ----------------- Helper: Digital Makeup (Lip Tint & Blush) -----------------
+private fun DrawScope.drawDigitalMakeup(
+    rect: RectF,
+    eyeRatio: Float,
+    mouthRatio: Float,
+    lipTint: Float,
+    blush: Float
+) {
+    val rw = rect.width()
+    val rh = rect.height()
+    val cx = rect.centerX()
+
+    // ۱. رژ گونه ملایم و طبیعی روی دو طرف گونه
+    if (blush > 0.05f) {
+        val cheekY = rect.top + rh * (eyeRatio + 0.12f)
+        val leftCheekX = cx - rw * 0.28f
+        val rightCheekX = cx + rw * 0.28f
+        val blushRadius = rw * 0.18f
+
+        listOf(leftCheekX, rightCheekX).forEach { cheekX ->
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFFE57373).copy(alpha = 0.22f * blush),
+                        Color(0xFFFFCDD2).copy(alpha = 0.10f * blush),
+                        Color.Transparent
+                    ),
+                    center = Offset(cheekX, cheekY),
+                    radius = blushRadius
+                ),
+                radius = blushRadius,
+                center = Offset(cheekX, cheekY)
+            )
+        }
+    }
+
+    // ۲. رژ لب براق و ژورنالی روی لب‌ها
+    if (lipTint > 0.05f) {
+        val mouthY = rect.top + rh * mouthRatio
+        val lipWidth = rw * 0.32f
+        val lipHeight = rh * 0.10f
+
+        drawOval(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color(0xFFC2185B).copy(alpha = 0.40f * lipTint),
+                    Color(0xFFE91E63).copy(alpha = 0.22f * lipTint),
+                    Color.Transparent
+                ),
+                center = Offset(cx, mouthY),
+                radius = lipWidth / 2f
+            ),
+            topLeft = Offset(cx - lipWidth / 2f, mouthY - lipHeight / 2f),
+            size = Size(lipWidth, lipHeight)
+        )
     }
 }

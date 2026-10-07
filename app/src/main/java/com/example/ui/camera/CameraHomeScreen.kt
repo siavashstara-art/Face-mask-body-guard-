@@ -287,6 +287,29 @@ fun CameraHomeScreen(
                         )
                     }
 
+                    // Video Audio Mute / Unmute Button (دکمه میوت کردن مستقیم فیلمبرداری)
+                    IconButton(
+                        onClick = { viewModel.toggleMuteVideo() },
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(
+                                if (voiceConfig.isMuted) BrickRedSubtle else WarmSurface.copy(alpha = 0.92f),
+                                CircleShape
+                            )
+                            .border(
+                                1.dp,
+                                if (voiceConfig.isMuted) BrickRed else WarmBorder,
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = if (voiceConfig.isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                            contentDescription = if (voiceConfig.isMuted) "Unmute Audio" else "Mute Video Audio",
+                            tint = if (voiceConfig.isMuted) BrickRed else TerracottaAccent,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
                     // Picture-in-Picture Button (تصویر در تصویر سیستم)
                     IconButton(
                         onClick = onEnterPip,

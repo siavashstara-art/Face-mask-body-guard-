@@ -185,6 +185,12 @@ fun PrivacyStudioPanel(
                 val name = when (mask) {
                     PrivacyMaskType.NONE -> if (isPersian) "بدون ماسک" else "None"
                     PrivacyMaskType.EYES_VISOR -> if (isPersian) "نوار چشم (سنسور)" else "Eyes Visor"
+                    PrivacyMaskType.BANDARI_BURQA -> if (isPersian) "نقاب برقع بندری (سنتی)" else "Bandari Burqa"
+                    PrivacyMaskType.KHALIJI_NIQAB -> if (isPersian) "نقاب نفتی خلیجی (عربی)" else "Khaliji Niqab"
+                    PrivacyMaskType.FANTASY_CROWN -> if (isPersian) "تاج فانتزی پرنسسی" else "Princess Crown"
+                    PrivacyMaskType.MASQUERADE_BALL -> if (isPersian) "ماسک بالماسکه مجلل" else "Masquerade"
+                    PrivacyMaskType.HEART_EYES -> if (isPersian) "نقاب قلب روی چشم‌ها" else "Heart Eyes"
+                    PrivacyMaskType.CAT_MYSTERY -> if (isPersian) "نقاب گربه‌ای رازآلود" else "Cat Mystery"
                     PrivacyMaskType.FULL_SHIELD -> if (isPersian) "سپر کامل صورت" else "Full Shield"
                     PrivacyMaskType.MOUTH_GUARD -> if (isPersian) "ماسک دهان" else "Mouth Guard"
                     PrivacyMaskType.ANONYMOUS_HOOD -> if (isPersian) "سیلوئت ناشناس" else "Silhouette"
@@ -520,7 +526,7 @@ fun FaceStyleStudioPanel(
 
         // Filter Presets
         Text(
-            text = if (isPersian) "تم رنگی انتخابی:" else "Artistic Look / Filter:",
+            text = if (isPersian) "تم رنگی و استایل انتخابی:" else "Artistic Look / Filter:",
             style = MaterialTheme.typography.bodyMedium,
             color = CharcoalSecondary
         )
@@ -557,21 +563,145 @@ fun FaceStyleStudioPanel(
             }
         }
 
+        // Blemish, Freckles, Spots, Acne & Scar Removal Slider (فتوشاپ و روتوش جای لک و جوش)
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    if (isPersian) "پاکسازی لک، جوش، کک‌ومک و پیسی:" else "Blemish, Spots & Acne Removal:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CharcoalSecondary
+                )
+                Text(
+                    "${(styleConfig.blemishRemoval * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TerracottaAccent,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Slider(
+                value = styleConfig.blemishRemoval,
+                onValueChange = { onUpdate(styleConfig.copy(blemishRemoval = it)) },
+                valueRange = 0f..1.0f,
+                colors = SliderDefaults.colors(
+                    thumbColor = TerracottaAccent,
+                    activeTrackColor = TerracottaAccent,
+                    inactiveTrackColor = WarmBorder
+                )
+            )
+        }
+
+        // Skin Tone Brightening / Bronzing Slider (روشن‌کننده و برنزه‌کردن پوست)
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                val toneLabel = when {
+                    styleConfig.skinToneBalance < -0.15f -> if (isPersian) "روشن‌کننده و مهتابی" else "Bright Porcelain"
+                    styleConfig.skinToneBalance > 0.15f -> if (isPersian) "برنزه خلیجی و گرم" else "Sunkissed Bronze"
+                    else -> if (isPersian) "طبیعی" else "Natural"
+                }
+                Text(
+                    if (isPersian) "تنظیم رنگ پوست (روشن/برنزه): $toneLabel" else "Skin Tone (Bright/Bronze): $toneLabel",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CharcoalSecondary
+                )
+                Text(
+                    String.format("%.1f", styleConfig.skinToneBalance),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedAmber,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Slider(
+                value = styleConfig.skinToneBalance,
+                onValueChange = { onUpdate(styleConfig.copy(skinToneBalance = it)) },
+                valueRange = -1.0f..1.0f,
+                colors = SliderDefaults.colors(
+                    thumbColor = MutedAmber,
+                    activeTrackColor = MutedAmber,
+                    inactiveTrackColor = WarmBorder
+                )
+            )
+        }
+
         // Skin Smoothing Slider
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(if (isPersian) "لطافت پوست (Skin Smoothing):" else "Skin Smoothing:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
-                Text("${(styleConfig.skinSmoothing * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
+                Text(if (isPersian) "لطافت و صاف‌سازی بافت پوست:" else "Skin Texture Smoothing:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                Text("${(styleConfig.skinSmoothing * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = SageGreen, fontWeight = FontWeight.Medium)
             }
             Slider(
                 value = styleConfig.skinSmoothing,
                 onValueChange = { onUpdate(styleConfig.copy(skinSmoothing = it)) },
                 valueRange = 0f..1.0f,
+                colors = SliderDefaults.colors(thumbColor = SageGreen, activeTrackColor = SageGreen, inactiveTrackColor = WarmBorder)
+            )
+        }
+
+        // Facial Slimming / Contouring Slider (لاغرسازی و زاویه‌سازی فک و صورت)
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                val slimLabel = when {
+                    styleConfig.facialSlimming < -0.1f -> if (isPersian) "لاغرتر و زاویه‌دار" else "Slimmer V-Line"
+                    styleConfig.facialSlimming > 0.1f -> if (isPersian) "گونه پرتر" else "Fuller Cheeks"
+                    else -> if (isPersian) "طبیعی" else "Natural"
+                }
+                Text(if (isPersian) "زاویه‌سازی و فرم فک و صورت: $slimLabel" else "Facial Slimming & V-Line: $slimLabel", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                Text("${(styleConfig.facialSlimming * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
+            }
+            Slider(
+                value = styleConfig.facialSlimming,
+                onValueChange = { onUpdate(styleConfig.copy(facialSlimming = it)) },
+                valueRange = -0.5f..0.5f,
                 colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
             )
+        }
+
+        // Makeup / Lip Tint & Blush Sliders (آرایش لب و گونه دیجیتال)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(if (isPersian) "رژ لب:" else "Lip Tint:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${(styleConfig.lipTintIntensity * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent)
+                }
+                Slider(
+                    value = styleConfig.lipTintIntensity,
+                    onValueChange = { onUpdate(styleConfig.copy(lipTintIntensity = it)) },
+                    valueRange = 0f..1.0f,
+                    colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(if (isPersian) "رژ گونه:" else "Blush:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${(styleConfig.blushIntensity * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = MutedAmber)
+                }
+                Slider(
+                    value = styleConfig.blushIntensity,
+                    onValueChange = { onUpdate(styleConfig.copy(blushIntensity = it)) },
+                    valueRange = 0f..1.0f,
+                    colors = SliderDefaults.colors(thumbColor = MutedAmber, activeTrackColor = MutedAmber, inactiveTrackColor = WarmBorder)
+                )
+            }
         }
 
         // Warmth / Coolness Slider
@@ -580,45 +710,58 @@ fun FaceStyleStudioPanel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(if (isPersian) "دمای رنگ (Warmth):" else "Color Warmth:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
-                Text(String.format("%.1f", styleConfig.warmth), style = MaterialTheme.typography.bodySmall, color = MutedAmber, fontWeight = FontWeight.Medium)
+                Text(if (isPersian) "دمای رنگ نوری (Warmth):" else "Color Warmth:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                Text(String.format("%.1f", styleConfig.warmth), style = MaterialTheme.typography.bodySmall, color = CharcoalPrimary, fontWeight = FontWeight.Medium)
             }
             Slider(
                 value = styleConfig.warmth,
                 onValueChange = { onUpdate(styleConfig.copy(warmth = it)) },
                 valueRange = -1.0f..1.0f,
-                colors = SliderDefaults.colors(thumbColor = MutedAmber, activeTrackColor = MutedAmber, inactiveTrackColor = WarmBorder)
+                colors = SliderDefaults.colors(thumbColor = CharcoalPrimary, activeTrackColor = CharcoalPrimary, inactiveTrackColor = WarmBorder)
             )
         }
 
-        // Alteration Label Watermark Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Watermark Freedom: With Watermark or Without Watermark Toggle (با یا بدون واتر مارک)
+        Surface(
+            color = WarmSurfaceSecondary,
+            shape = RoundedCornerShape(10.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isPersian) "نشانگر شفافیت تغییر دیجیتالی" else "Digitally Altered Badge",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CharcoalPrimary
-                )
-                Text(
-                    text = if (isPersian) "نمایش برچسب شفافیت برای جلوه‌های دیجیتالی" else "Transparently indicates digital camera enhancement",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = CharcoalSecondary
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isPersian) "انتخاب حالت با واتر مارک / بدون واتر مارک" else "Watermark Mode (With / Without)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = CharcoalPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = if (styleConfig.showAlterationBadge) {
+                            if (isPersian) "حالت فعال: برچسب اصالت و امضای دیجیتالی نمایش داده می‌شود" else "Active: Verification badge visible"
+                        } else {
+                            if (isPersian) "حالت آزاد (بدون واتر مارک): خروجی ۱۰۰٪ تمیز، بدون هیچ لوگو یا برچسب" else "Clean Mode: 100% No watermark"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (styleConfig.showAlterationBadge) TerracottaAccent else SageGreen
+                    )
+                }
+                Switch(
+                    checked = styleConfig.showAlterationBadge,
+                    onCheckedChange = { onUpdate(styleConfig.copy(showAlterationBadge = it)) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = TerracottaAccent,
+                        uncheckedThumbColor = CharcoalSecondary,
+                        uncheckedTrackColor = WarmBorder
+                    )
                 )
             }
-            Switch(
-                checked = styleConfig.showAlterationBadge,
-                onCheckedChange = { onUpdate(styleConfig.copy(showAlterationBadge = it)) },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = TerracottaAccent,
-                    uncheckedThumbColor = CharcoalSecondary,
-                    uncheckedTrackColor = WarmSurfaceSecondary
-                )
-            )
         }
     }
 }
@@ -710,7 +853,12 @@ fun BodySilhouetteStudioPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(if (isPersian) "تنظیم کانتور دور کمر:" else "Waist Contour:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    val waistLabel = when {
+                        silhouetteConfig.waistContour < -0.1f -> if (isPersian) "لاغرسازی و باریک‌کردن کمر" else "Slender Waist"
+                        silhouetteConfig.waistContour > 0.1f -> if (isPersian) "پهن‌تر کردن دور کمر" else "Wider Waist"
+                        else -> if (isPersian) "طبیعی" else "Natural"
+                    }
+                    Text(if (isPersian) "تنظیم کانتور کمر (لاغری/چاقی): $waistLabel" else "Waist Contour: $waistLabel", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
                     Text("${(silhouetteConfig.waistContour * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
                 }
                 Slider(
@@ -726,23 +874,55 @@ fun BodySilhouetteStudioPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(if (isPersian) "تنظیم کانتور شانه‌ها:" else "Shoulder Contour:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
-                    Text("${(silhouetteConfig.shoulderContour * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
+                    Text(if (isPersian) "برجسته‌سازی اندام و باسن (ویژه مانکن لاغر):" else "Hip & Curves Enhancement:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${(silhouetteConfig.hipEnhancement * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
+                }
+                Slider(
+                    value = silhouetteConfig.hipEnhancement,
+                    onValueChange = { onUpdate(silhouetteConfig.copy(hipEnhancement = it)) },
+                    valueRange = 0f..0.8f,
+                    colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                )
+            }
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(if (isPersian) "فرم‌دهی بالاتنه و سینه:" else "Chest & Upper Body Contour:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${(silhouetteConfig.chestEnhancement * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = MutedAmber, fontWeight = FontWeight.Medium)
+                }
+                Slider(
+                    value = silhouetteConfig.chestEnhancement,
+                    onValueChange = { onUpdate(silhouetteConfig.copy(chestEnhancement = it)) },
+                    valueRange = 0f..0.8f,
+                    colors = SliderDefaults.colors(thumbColor = MutedAmber, activeTrackColor = MutedAmber, inactiveTrackColor = WarmBorder)
+                )
+            }
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(if (isPersian) "تنظیم کانتور و عرض شانه‌ها:" else "Shoulder Contour:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${(silhouetteConfig.shoulderContour * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = SageGreen, fontWeight = FontWeight.Medium)
                 }
                 Slider(
                     value = silhouetteConfig.shoulderContour,
                     onValueChange = { onUpdate(silhouetteConfig.copy(shoulderContour = it)) },
                     valueRange = -0.5f..0.5f,
-                    colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
+                    colors = SliderDefaults.colors(thumbColor = SageGreen, activeTrackColor = SageGreen, inactiveTrackColor = WarmBorder)
                 )
             }
 
             OutlinedButton(
-                onClick = { onUpdate(silhouetteConfig.copy(waistContour = 0f, shoulderContour = 0f, overallScale = 0f)) },
+                onClick = { onUpdate(silhouetteConfig.copy(waistContour = 0f, hipEnhancement = 0f, chestEnhancement = 0f, shoulderContour = 0f, overallScale = 0f)) },
                 border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isPersian) "بازنشانی پارامترها" else "Reset Parameters", color = CharcoalPrimary)
+                Text(if (isPersian) "بازنشانی پارامترهای اندام" else "Reset Body Parameters", color = CharcoalPrimary)
             }
         }
     }
@@ -769,18 +949,18 @@ fun VoiceStudioPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (isPersian) "استودیو صدای خصوصی" else "Private Voice Studio",
+                text = if (isPersian) "استودیو صدای طبیعی و خصوصی" else "Natural & Private Voice Studio",
                 style = MaterialTheme.typography.titleMedium,
                 color = CharcoalPrimary,
                 fontWeight = FontWeight.SemiBold
             )
             Surface(
-                color = SageGreenSubtle,
+                color = if (voiceConfig.isMuted) BrickRedSubtle else SageGreenSubtle,
                 shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
-                    text = if (isPersian) "صدا ۱۰۰٪ محلی" else "Local Audio",
-                    color = SageGreen,
+                    text = if (voiceConfig.isMuted) (if (isPersian) "بی‌صدا (Muted)" else "Muted") else (if (isPersian) "صدا ۱۰۰٪ محلی" else "Local Audio"),
+                    color = if (voiceConfig.isMuted) BrickRed else SageGreen,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -788,90 +968,218 @@ fun VoiceStudioPanel(
             }
         }
 
-        // Voice Profile
-        Text(
-            text = if (isPersian) "پروفایل تن صدا:" else "Voice Profile:",
-            style = MaterialTheme.typography.bodyMedium,
-            color = CharcoalSecondary
-        )
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+        // 1. MUTE VIDEO TOGGLE (میوت کردن کامل صدای فیلم)
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (voiceConfig.isMuted) BrickRedSubtle else WarmSurfaceSecondary
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (voiceConfig.isMuted) BrickRed else WarmBorder
+            )
         ) {
-            items(PitchProfile.values()) { profile ->
-                val selected = voiceConfig.pitchProfile == profile
-                Card(
-                    modifier = Modifier
-                        .clickable { onUpdate(voiceConfig.copy(pitchProfile = profile)) }
-                        .border(
-                            width = 1.dp,
-                            color = if (selected) TerracottaAccent else WarmBorder,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (selected) TerracottaSubtle else WarmSurface
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Icon(
+                        imageVector = if (voiceConfig.isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = if (voiceConfig.isMuted) BrickRed else TerracottaAccent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column {
                         Text(
-                            text = if (isPersian) profile.titleFa else profile.titleEn,
-                            color = if (selected) TerracottaHover else CharcoalPrimary,
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+                            text = if (isPersian) "میوت کردن صدای فیلم (ضبط بی‌صدا)" else "Mute Video Recording",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = CharcoalPrimary
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "فیلمبرداری کاملاً بدون صدا انجام می‌شود و هیچ فایل صوتی ذخیره نمی‌گردد."
+                            else
+                                "Record video silently without any audio track saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CharcoalSecondary
                         )
                     }
                 }
-            }
-        }
-
-        // Mic Gain Slider
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(if (isPersian) "تقویت میکروفون (Gain):" else "Microphone Gain:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
-                Text("${String.format("%.1f", voiceConfig.micGain)}x", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
-            }
-            Slider(
-                value = voiceConfig.micGain,
-                onValueChange = { onUpdate(voiceConfig.copy(micGain = it)) },
-                valueRange = 0.5f..2.0f,
-                colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
-            )
-        }
-
-        // Noise Reduction Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isPersian) "حذف نویز محیطی" else "Offline Noise Suppression",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CharcoalPrimary
+                Switch(
+                    checked = voiceConfig.isMuted,
+                    onCheckedChange = { onUpdate(voiceConfig.copy(isMuted = it)) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = BrickRed,
+                        uncheckedThumbColor = CharcoalSecondary,
+                        uncheckedTrackColor = WarmSurfaceSecondary
+                    )
                 )
+            }
+        }
+
+        if (!voiceConfig.isMuted) {
+            // 2. Natural Acoustic Smoothing
+            Card(
+                colors = CardDefaults.cardColors(containerColor = WarmSurfaceSecondary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isPersian) "طبیعی‌سازی ارگانیک صدا (بدون حالت بم یا رباتیک)" else "Organic Natural Voice Acoustic",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = CharcoalPrimary
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "حفظ فرکانس‌های زنده تار صوتی برای داشتن تغییری کاملاً نامحسوس و طبیعی"
+                            else
+                                "Preserves natural human formant and throat resonances without robotic artifacts.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CharcoalSecondary
+                        )
+                    }
+                    Switch(
+                        checked = voiceConfig.naturalAcousticSmoothing,
+                        onCheckedChange = { onUpdate(voiceConfig.copy(naturalAcousticSmoothing = it)) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = TerracottaAccent,
+                            uncheckedThumbColor = CharcoalSecondary,
+                            uncheckedTrackColor = WarmSurfaceSecondary
+                        )
+                    )
+                }
+            }
+
+            // 3. Voice Profile Selection
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = if (isPersian) "کاهش صدای محیط بدون ارسال داده صوتی" else "Clean audio capture on device",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = if (isPersian) "تن و جنس صدای انتخابی (تغییر صدای طبیعی):" else "Voice Character Profile:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
                     color = CharcoalSecondary
                 )
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(PitchProfile.values()) { profile ->
+                        val selected = voiceConfig.pitchProfile == profile
+                        Card(
+                            modifier = Modifier
+                                .clickable { onUpdate(voiceConfig.copy(pitchProfile = profile)) }
+                                .border(
+                                    width = 1.dp,
+                                    color = if (selected) TerracottaAccent else WarmBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selected) TerracottaSubtle else WarmSurfaceSecondary
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    if (profile.isNatural) {
+                                        Surface(
+                                            color = SageGreenSubtle,
+                                            shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text(
+                                                text = if (isPersian) "طبیعی" else "Natural",
+                                                color = SageGreen,
+                                                fontSize = 9.sp,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = if (isPersian) profile.titleFa else profile.titleEn,
+                                        color = if (selected) TerracottaHover else CharcoalPrimary,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                                    )
+                                }
+                                Text(
+                                    text = if (isPersian) profile.descriptionFa else "Frequency factor: ${profile.pitchFactor}x",
+                                    color = CharcoalSecondary,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
-            Switch(
-                checked = voiceConfig.noiseReduction,
-                onCheckedChange = { onUpdate(voiceConfig.copy(noiseReduction = it)) },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = TerracottaAccent,
-                    uncheckedThumbColor = CharcoalSecondary,
-                    uncheckedTrackColor = WarmSurfaceSecondary
+
+            // 4. Mic Gain Slider
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(if (isPersian) "تنظیم بلندی میکروفون (Gain):" else "Microphone Gain:", style = MaterialTheme.typography.bodySmall, color = CharcoalSecondary)
+                    Text("${String.format("%.1f", voiceConfig.micGain)}x", style = MaterialTheme.typography.bodySmall, color = TerracottaAccent, fontWeight = FontWeight.Medium)
+                }
+                Slider(
+                    value = voiceConfig.micGain,
+                    onValueChange = { onUpdate(voiceConfig.copy(micGain = it)) },
+                    valueRange = 0.5f..2.0f,
+                    colors = SliderDefaults.colors(thumbColor = TerracottaAccent, activeTrackColor = TerracottaAccent, inactiveTrackColor = WarmBorder)
                 )
-            )
+            }
+
+            // 5. Noise Reduction Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isPersian) "حذف نویز محیطی بدون تغییر صدا" else "Offline Noise Suppression",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = CharcoalPrimary
+                    )
+                    Text(
+                        text = if (isPersian) "پالایش صدای پس‌زمینه و صدای باد" else "Clean audio capture on device",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CharcoalSecondary
+                    )
+                }
+                Switch(
+                    checked = voiceConfig.noiseReduction,
+                    onCheckedChange = { onUpdate(voiceConfig.copy(noiseReduction = it)) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = TerracottaAccent,
+                        uncheckedThumbColor = CharcoalSecondary,
+                        uncheckedTrackColor = WarmSurfaceSecondary
+                    )
+                )
+            }
         }
     }
 }

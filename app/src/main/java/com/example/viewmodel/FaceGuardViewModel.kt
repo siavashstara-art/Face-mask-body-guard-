@@ -395,6 +395,16 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
         _privacyConfig.value = _privacyConfig.value.copy(manualZones = emptyList())
     }
 
+    fun toggleMuteVideo() {
+        val newMuted = !_voiceConfig.value.isMuted
+        _voiceConfig.value = _voiceConfig.value.copy(isMuted = newMuted)
+        _statusMessage.value = if (_isPersian.value) {
+            if (newMuted) "صدای فیلمبرداری قطع شد (بی‌صدا / Mute)" else "صدای فیلمبرداری فعال شد"
+        } else {
+            if (newMuted) "Video recording muted (Silent)" else "Video recording unmuted"
+        }
+    }
+
     fun toggleRecording(onComplete: (Boolean) -> Unit = {}) {
         if (_isRecording.value) {
             recordingEngine.stopRecording()
@@ -404,8 +414,9 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
             onComplete(false)
         } else {
             try {
+                val shouldRecordAudio = !_voiceConfig.value.isMuted
                 recordingEngine.startRecording(
-                    enableAudio = true,
+                    enableAudio = shouldRecordAudio,
                     onEvent = { event ->
                         _isRecording.value = recordingEngine.isRecording
                         _recordingDurationSec.value = recordingEngine.recordingDurationSeconds

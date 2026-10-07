@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- AI Synthetic Beauty Salon Virtual Face for Portfolio Archive -->
+    <!-- Preserves Hairstyle & Ironing while masking real identity with photorealistic synthetic face -->
+    <!-- Soft Natural Skin Foundation -->
+    <path
+        android:fillColor="#F6ECE1"
+        android:pathData="M72,70 C72,32 184,32 184,70 C184,136 170,214 128,234 C86,214 72,136 72,70 Z" />
+    <!-- Natural AI Brow Arches -->
+    <path
+        android:fillColor="#3D291F"
+        android:pathData="M84,86 C94,80 110,82 116,88 C112,90 96,88 86,90 Z" />
+    <path
+        android:fillColor="#3D291F"
+        android:pathData="M172,86 C162,80 146,82 140,88 C144,90 160,88 170,90 Z" />
+    <!-- Almond Shaped Expressive Eyes -->
+    <path
+        android:fillColor="#241E1C"
+        android:pathData="M88,102 C96,96 110,98 116,104 C110,110 96,110 88,102 Z" />
+    <path
+        android:fillColor="#241E1C"
+        android:pathData="M168,102 C160,96 146,98 140,104 C146,110 160,110 168,102 Z" />
+    <!-- Delicate Eyelashes -->
+    <path
+        android:strokeColor="#1F1B1A"
+        android:strokeWidth="1.5"
+        android:pathData="M86,101 C92,94 112,96 118,103 M166,101 C160,94 144,96 138,103" />
+    <!-- Soft Contoured Nose -->
+    <path
+        android:fillColor="#E2CCA8"
+        android:pathData="M126,108 C128,108 130,126 132,138 C135,142 121,142 124,138 C126,126 124,108 126,108 Z" />
+    <!-- Natural Velvet Rose Lips -->
+    <path
+        android:fillColor="#C85A6A"
+        android:pathData="M106,174 C116,166 124,168 128,167 C132,168 140,166 150,174 C154,182 144,192 128,190 C112,192 102,182 106,174 Z" />
+    <!-- Studio Gloss Highlight on Lips -->
+    <path
+        android:fillColor="#FBE0E5"
+        android:pathData="M120,174 C124,171 132,171 136,174 C132,176 124,176 120,174 Z" />
+</vector>

@@ -65,19 +65,19 @@ class MainActivity : ComponentActivity() {
                                 onUnlockStudio = { isStealthCalculatorActive = false }
                             )
                         } else {
-                            CameraPermissionScreen(isPersian = appLanguage == AppLanguage.PERSIAN) {
-                                AnimatedContent(
-                                    targetState = currentScreen,
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                    label = "ScreenTransition"
-                                ) { screen ->
-                                    when (screen) {
-                                        "gallery" -> OfflineVideoLabScreen(
-                                            storageManager = viewModel.storageManager,
-                                            isPersian = appLanguage == AppLanguage.PERSIAN,
-                                            onNavigateBack = { viewModel.navigateTo("facecard") }
-                                        )
-                                        "camera" -> CameraHomeScreen(
+                            AnimatedContent(
+                                targetState = currentScreen,
+                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                label = "ScreenTransition"
+                            ) { screen ->
+                                when (screen) {
+                                    "gallery" -> OfflineVideoLabScreen(
+                                        storageManager = viewModel.storageManager,
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") }
+                                    )
+                                    "camera" -> CameraPermissionScreen(isPersian = appLanguage == AppLanguage.PERSIAN) {
+                                        CameraHomeScreen(
                                             viewModel = viewModel,
                                             onNavigateToGallery = { viewModel.navigateTo("gallery") },
                                             isInPipMode = isPip,
@@ -85,12 +85,12 @@ class MainActivity : ComponentActivity() {
                                             onTriggerStealth = { isStealthCalculatorActive = true },
                                             onNavigateBackToFaceCard = { viewModel.navigateTo("facecard") }
                                         )
-                                        else -> FaceCardMainHostScreen(
-                                            viewModel = viewModel,
-                                            onNavigateToStudio = { viewModel.navigateTo("camera") },
-                                            onNavigateToGallery = { viewModel.navigateTo("gallery") }
-                                        )
                                     }
+                                    else -> FaceCardMainHostScreen(
+                                        viewModel = viewModel,
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") },
+                                        onNavigateToGallery = { viewModel.navigateTo("gallery") }
+                                    )
                                 }
                             }
                         }
@@ -102,10 +102,16 @@ class MainActivity : ComponentActivity() {
 
     private fun enterStudioPipMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val params = PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(9, 16))
-                .build()
-            enterPictureInPictureMode(params)
+            try {
+                if (packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                    val params = PictureInPictureParams.Builder()
+                        .setAspectRatio(Rational(9, 16))
+                        .build()
+                    enterPictureInPictureMode(params)
+                }
+            } catch (_: Throwable) {
+                // Gracefully fallback on devices with restricted PiP
+            }
         }
     }
 
@@ -119,11 +125,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val params = PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(9, 16))
-                .build()
-            enterPictureInPictureMode(params)
-        }
+        // Do not force PiP on leave to prevent crashes on MIUI and One UI
     }
 }

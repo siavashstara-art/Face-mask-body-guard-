@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- AI Synthetic Glamour Salon Virtual Model -->
+    <!-- Preserves Hairstyle & Balayage with AI Face Identity Mask -->
+    <!-- Soft Warm Skin Foundation -->
+    <path
+        android:fillColor="#FBEFE3"
+        android:pathData="M74,72 C74,34 182,34 182,72 C182,136 168,214 128,233 C88,214 74,136 74,72 Z" />
+    <!-- Warm Peach Blush -->
+    <path
+        android:fillColor="#F3D5C5"
+        android:pathData="M78,130 C78,118 96,118 96,130 C96,142 78,142 78,130 Z" />
+    <path
+        android:fillColor="#F3D5C5"
+        android:pathData="M160,130 C160,118 178,118 178,130 C178,142 160,142 160,130 Z" />
+    <!-- Elegant Brows -->
+    <path
+        android:fillColor="#4A3425"
+        android:pathData="M84,88 C94,82 110,84 116,90 C110,92 96,90 84,92 Z" />
+    <path
+        android:fillColor="#4A3425"
+        android:pathData="M172,88 C162,82 146,84 140,90 C146,92 160,90 172,92 Z" />
+    <!-- Smokey Cat Eye Makeup -->
+    <path
+        android:fillColor="#1A1817"
+        android:pathData="M84,103 C94,95 112,97 118,105 C110,111 94,111 84,103 Z" />
+    <path
+        android:fillColor="#1A1817"
+        android:pathData="M172,103 C162,95 144,97 138,105 C146,111 162,111 172,103 Z" />
+    <!-- Shimmer Iris -->
+    <path
+        android:fillColor="#537D8D"
+        android:pathData="M98,101 C102,101 106,104 106,108 C106,112 102,114 98,114 C94,114 91,112 91,108 C91,104 94,101 98,101 Z" />
+    <path
+        android:fillColor="#537D8D"
+        android:pathData="M158,101 C162,101 165,104 165,108 C165,112 162,114 158,114 C154,114 150,112 150,108 C150,104 154,101 158,101 Z" />
+    <!-- Nose Contour -->
+    <path
+        android:fillColor="#E5CCA8"
+        android:pathData="M125,106 C127,106 129,128 131,140 C134,144 122,144 125,140 C127,128 125,106 125,106 Z" />
+    <!-- Matte Terracotta Lips -->
+    <path
+        android:fillColor="#BA4A4A"
+        android:pathData="M104,175 C114,167 124,169 128,168 C132,169 142,167 152,175 C156,183 146,193 128,191 C110,193 100,183 104,175 Z" />
+</vector>

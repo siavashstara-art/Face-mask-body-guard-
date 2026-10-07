@@ -1,0 +1,55 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="360dp"
+    android:viewportWidth="256"
+    android:viewportHeight="360">
+    <!-- Brazilian Shelf Butt & Sculpted Lifted Bust VIP Mannequin -->
+    <!-- Torso Silhouette: Slim Tapered Waist, Lifted Perky Bust, High Shelf Round Contoured Hips -->
+    <path
+        android:fillColor="#F0E5D8"
+        android:pathData="M116,18 L140,18 L142,42 L176,50 C194,56 198,72 196,92 C192,118 178,138 150,154 C144,158 140,166 140,174 C140,186 172,210 184,232 C194,252 194,276 174,296 C162,308 144,314 128,314 C112,314 94,308 82,296 C62,276 62,252 72,232 C84,210 116,186 116,174 C116,166 112,158 106,154 C78,138 64,118 60,92 C58,72 62,56 80,50 L114,42 Z" />
+    <!-- Sculpted Bust Lift Contours (سینه لیفت شده و برجسته) -->
+    <path
+        android:strokeColor="#C85A32"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:pathData="M90,96 C102,118 116,122 124,120 M166,96 C154,118 140,122 132,120" />
+    <path
+        android:strokeColor="#C85A32"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000"
+        android:pathData="M98,82 C110,80 120,86 124,96 M158,82 C146,80 136,86 132,96" />
+    <!-- Cleavage & Center Sternum Shading -->
+    <path
+        android:strokeColor="#B87352"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M128,88 L128,124" />
+    <!-- Tapered Snapped Waist Guideline (کمر باریک ساعت شنی) -->
+    <path
+        android:strokeColor="#D48B70"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000"
+        android:pathData="M112,168 C120,172 136,172 144,168" />
+    <!-- Shelf-Butt / Round Brazilian High-Hip Contour Lines (طاقچه گرد و لیفت باسن) -->
+    <path
+        android:strokeColor="#C85A32"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:pathData="M78,240 C100,224 122,230 128,242 C134,230 156,224 178,240" />
+    <path
+        android:strokeColor="#C85A32"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M84,272 C104,286 122,286 128,276 C134,286 152,286 172,272" />
+    <!-- High Shelf Edge Accents (خطوط طاقچه‌ای) -->
+    <path
+        android:strokeColor="#A84826"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M86,228 C98,220 114,222 124,228 M170,228 C158,220 142,222 132,228" />
+    <!-- Stand Wooden Cap & Base Finial -->
+    <path
+        android:fillColor="#221E1B"
+        android:pathData="M112,12 C112,8 144,8 144,12 L140,20 L116,20 Z" />
+</vector>

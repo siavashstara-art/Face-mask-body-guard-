@@ -15,7 +15,13 @@ enum class PrivacyMaskType {
     MOUTH_GUARD,       // Anonymizing mouth and chin bar
     ANONYMOUS_HOOD,    // Dark silhouette shroud covering head and neck
     CYBER_NEON,        // Glowing cyber-grid matrix mask
-    VENETIAN_LINES     // Slotted horizontal privacy blinds
+    VENETIAN_LINES,    // Slotted horizontal privacy blinds
+    BANDARI_BURQA,     // نقاب برقع بندری سنتی طلایی/سیاه
+    KHALIJI_NIQAB,     // نقاب عربی و نفتی خلیجی با خط طلایی
+    FANTASY_CROWN,     // تاج فانتزی پرنسسی روی سر مدل
+    MASQUERADE_BALL,   // ماسک بالماسکه مجلل و پردار
+    HEART_EYES,        // نقاب فانتزی قلب روی چشمان مدل (عدم شناسایی هویت با استایل ترند)
+    CAT_MYSTERY        // نقاب گربه‌ای فانتزی بالماسکه
 }
 
 data class TrackedFace(
