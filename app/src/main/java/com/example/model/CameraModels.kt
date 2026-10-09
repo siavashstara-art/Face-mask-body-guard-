@@ -23,6 +23,8 @@ enum class ActiveStudioTab {
     SWAP,
     STORY_STREAM,
     CATALOG,
+    WEDDING_STRESS_RELIEF,
+    MAISON_TRYON,
     SETTINGS
 }
 

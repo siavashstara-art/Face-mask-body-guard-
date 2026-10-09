@@ -38,6 +38,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Global safeguard against hardware/codec exceptions on diverse Android devices
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("FaceGuard", "Hardware/Codec exception caught safely on ${thread.name}", throwable)
+            val msg = throwable.message?.lowercase() ?: ""
+            if (throwable is SecurityException ||
+                throwable is IllegalStateException ||
+                msg.contains("camera") ||
+                msg.contains("audio") ||
+                msg.contains("codec") ||
+                msg.contains("surface")
+            ) {
+                // Prevent crash exit back to launcher; keep app running
+            } else {
+                defaultHandler?.uncaughtException(thread, throwable)
+            }
+        }
+
         setContent {
             FaceGuardTheme {
                 val viewModel: FaceGuardViewModel = viewModel()

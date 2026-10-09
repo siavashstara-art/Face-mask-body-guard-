@@ -42,8 +42,10 @@ import com.example.model.BackgroundMode
 import com.example.model.BlurType
 import com.example.model.BundledEnvironments
 import com.example.model.BundledSwapItems
+import com.example.model.ConfidencePoseGuideType
 import com.example.model.FaceStyleConfig
 import com.example.model.FilterPreset
+import com.example.model.MaisonGarmentItem
 import com.example.model.PrivacyConfig
 import com.example.model.PrivacyMaskType
 import com.example.model.ProductCatalogConfig
@@ -52,6 +54,7 @@ import com.example.model.SwapConfig
 import com.example.model.TrackedFace
 import com.example.model.WatermarkConfig
 import com.example.model.WatermarkPosition
+import com.example.model.WeddingDayLightTime
 import com.example.ui.theme.CharcoalPrimary
 import com.example.ui.theme.CharcoalSecondary
 import com.example.ui.theme.CharcoalTertiary
@@ -78,6 +81,10 @@ fun PrivacyCameraOverlay(
     swapConfig: SwapConfig = SwapConfig(),
     watermarkConfig: WatermarkConfig = WatermarkConfig(),
     currentAppMode: AppModePreset = AppModePreset.STANDARD,
+    selectedLightTime: WeddingDayLightTime = WeddingDayLightTime.NATURAL_GARDEN_DAY,
+    selectedPoseGuide: ConfidencePoseGuideType = ConfidencePoseGuideType.GRAND_ENTRY,
+    isPoseGuideVisible: Boolean = false,
+    activeMaisonGarment: MaisonGarmentItem? = null,
     onTapAddManualZone: (Offset) -> Unit = {}
 ) {
     // Load virtual background image if selected
@@ -315,6 +322,52 @@ fun PrivacyCameraOverlay(
                 drawLine(gridColor, Offset(canvasW * 0.666f, 0f), Offset(canvasW * 0.666f, canvasH), strokeWidth = 1.5f)
                 drawLine(gridColor, Offset(0f, canvasH * 0.333f), Offset(canvasW, canvasH * 0.333f), strokeWidth = 1.5f)
                 drawLine(gridColor, Offset(0f, canvasH * 0.666f), Offset(canvasW, canvasH * 0.666f), strokeWidth = 1.5f)
+            }
+
+            // 4d. Wedding Day Light Time Machine Ambient Filter (ماشین زمان نور روز واقعه)
+            if (selectedLightTime != WeddingDayLightTime.NATURAL_GARDEN_DAY) {
+                drawRect(
+                    color = Color(selectedLightTime.filterColorHex),
+                    topLeft = Offset(0f, 0f),
+                    size = Size(canvasW, canvasH)
+                )
+            }
+
+            // 4e. Confidence Pose Guide & Golden Ratio Lines (خطوط طلایی ژست‌های بدون استرس)
+            if (isPoseGuideVisible) {
+                val goldenColor = Color(0xFFE5A93C).copy(alpha = 0.55f)
+                drawLine(goldenColor, Offset(canvasW * 0.38f, 0f), Offset(canvasW * 0.38f, canvasH), strokeWidth = 1.6f)
+                drawLine(goldenColor, Offset(canvasW * 0.62f, 0f), Offset(canvasW * 0.62f, canvasH), strokeWidth = 1.6f)
+                drawOval(
+                    color = goldenColor,
+                    topLeft = Offset(canvasW * 0.22f, canvasH * 0.12f),
+                    size = Size(canvasW * 0.56f, canvasH * 0.52f),
+                    style = Stroke(width = 2.0f)
+                )
+            }
+        }
+
+        // 4f. Partner Maison Boutique Badge on Camera Viewfinder
+        if (activeMaisonGarment != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 14.dp, top = 82.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(WarmSurface.copy(alpha = 0.92f))
+                    .border(1.dp, TerracottaAccent, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(TerracottaAccent))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "🏛️ ${activeMaisonGarment.maisonName} (پرو رسمی)",
+                        fontSize = 10.sp,
+                        color = CharcoalPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 

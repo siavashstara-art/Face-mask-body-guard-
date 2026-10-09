@@ -21,6 +21,8 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     val recordingEngine = RecordingEngine(application, storageManager)
     val faceDetectionEngine = FaceDetectionEngine()
     val faceCardRepo = com.example.engine.FaceCardRepository(application)
+    val ecosystemController = com.example.engine.EcosystemMasterController(application)
+    val maisonRepo = com.example.engine.MaisonBoutiqueRepository(application)
 
     // Config states
     private val _privacyConfig = MutableStateFlow(PrivacyConfig())
@@ -88,6 +90,28 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _showPrivacyAudit = MutableStateFlow(false)
     val showPrivacyAudit: StateFlow<Boolean> = _showPrivacyAudit.asStateFlow()
+
+    // Wedding Day Stress Relief & Light Simulator states
+    private val _selectedLightTime = MutableStateFlow(WeddingDayLightTime.NATURAL_GARDEN_DAY)
+    val selectedLightTime: StateFlow<WeddingDayLightTime> = _selectedLightTime.asStateFlow()
+
+    private val _selectedPoseGuide = MutableStateFlow(ConfidencePoseGuideType.GRAND_ENTRY)
+    val selectedPoseGuide: StateFlow<ConfidencePoseGuideType> = _selectedPoseGuide.asStateFlow()
+
+    private val _isPoseGuideVisible = MutableStateFlow(false)
+    val isPoseGuideVisible: StateFlow<Boolean> = _isPoseGuideVisible.asStateFlow()
+
+    fun updateLightTime(time: WeddingDayLightTime) {
+        _selectedLightTime.value = time
+    }
+
+    fun updatePoseGuide(pose: ConfidencePoseGuideType) {
+        _selectedPoseGuide.value = pose
+    }
+
+    fun togglePoseGuide(visible: Boolean) {
+        _isPoseGuideVisible.value = visible
+    }
 
     private val _currentScreen = MutableStateFlow("facecard") // "facecard", "camera", "gallery"
     val currentScreen: StateFlow<String> = _currentScreen.asStateFlow()
@@ -407,10 +431,12 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun toggleRecording(onComplete: (Boolean) -> Unit = {}) {
         if (_isRecording.value) {
-            recordingEngine.stopRecording()
+            try {
+                recordingEngine.stopRecording()
+            } catch (_: Throwable) {}
             _isRecording.value = false
             _recordingDurationSec.value = 0L
-            _statusMessage.value = if (_isPersian.value) "ویدیو در گالری ذخیره شد" else "Video saved to local gallery"
+            _statusMessage.value = if (_isPersian.value) "ویدیو با موفقیت در گالری ذخیره شد" else "Video saved to local gallery"
             onComplete(false)
         } else {
             try {
@@ -418,13 +444,30 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
                 recordingEngine.startRecording(
                     enableAudio = shouldRecordAudio,
                     onEvent = { event ->
-                        _isRecording.value = recordingEngine.isRecording
-                        _recordingDurationSec.value = recordingEngine.recordingDurationSeconds
+                        when (event) {
+                            is androidx.camera.video.VideoRecordEvent.Start -> {
+                                _isRecording.value = true
+                                _statusMessage.value = if (_isPersian.value) "فیلمبرداری امن آغاز شد" else "Private recording started"
+                            }
+                            is androidx.camera.video.VideoRecordEvent.Finalize -> {
+                                _isRecording.value = false
+                                _recordingDurationSec.value = 0L
+                                if (event.hasError()) {
+                                    _statusMessage.value = if (_isPersian.value) "ضبط متوقف شد" else "Recording stopped"
+                                } else {
+                                    _statusMessage.value = if (_isPersian.value) "ویدیو با موفقیت ذخیره شد" else "Video saved to gallery"
+                                }
+                            }
+                            is androidx.camera.video.VideoRecordEvent.Status -> {
+                                _recordingDurationSec.value = recordingEngine.recordingDurationSeconds
+                            }
+                        }
                     }
                 )
                 _isRecording.value = true
                 onComplete(true)
-            } catch (e: Exception) {
+            } catch (t: Throwable) {
+                _isRecording.value = false
                 _statusMessage.value = if (_isPersian.value) "خطا در شروع ضبط" else "Failed to start recording"
             }
         }

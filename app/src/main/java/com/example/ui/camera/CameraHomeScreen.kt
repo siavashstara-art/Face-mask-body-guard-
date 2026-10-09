@@ -1,5 +1,6 @@
 package com.example.ui.camera
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,8 +63,17 @@ fun CameraHomeScreen(
     val showAudit by viewModel.showPrivacyAudit.collectAsStateWithLifecycle()
     val statusMsg by viewModel.statusMessage.collectAsStateWithLifecycle()
 
+    val selectedLightTime by viewModel.selectedLightTime.collectAsStateWithLifecycle()
+    val selectedPoseGuide by viewModel.selectedPoseGuide.collectAsStateWithLifecycle()
+    val isPoseGuideVisible by viewModel.isPoseGuideVisible.collectAsStateWithLifecycle()
+    val activeMaisonGarment by viewModel.maisonRepo.activeGarment.collectAsStateWithLifecycle()
+
     val isPersian = appLanguage == AppLanguage.PERSIAN
     val isArabic = appLanguage == AppLanguage.ARABIC
+
+    BackHandler {
+        onNavigateBackToFaceCard()
+    }
 
     var overlayWidth by remember { mutableStateOf(1080f) }
     var overlayHeight by remember { mutableStateOf(1920f) }
@@ -103,6 +113,10 @@ fun CameraHomeScreen(
             swapConfig = swapConfig,
             watermarkConfig = watermarkConfig,
             currentAppMode = currentAppMode,
+            selectedLightTime = selectedLightTime,
+            selectedPoseGuide = selectedPoseGuide,
+            isPoseGuideVisible = isPoseGuideVisible,
+            activeMaisonGarment = activeMaisonGarment,
             onTapAddManualZone = { offset ->
                 viewModel.addManualPrivacyZone(offset, overlayWidth, overlayHeight)
             },
@@ -736,6 +750,18 @@ fun CameraHomeScreen(
                                 isPersian = isPersian || isArabic,
                                 onUpdate = { viewModel.updateCatalogConfig(it) }
                             )
+                            ActiveStudioTab.WEDDING_STRESS_RELIEF -> WeddingStressReliefPanel(
+                                selectedLightTime = selectedLightTime,
+                                onSelectLightTime = { viewModel.updateLightTime(it) },
+                                selectedPoseGuide = selectedPoseGuide,
+                                onSelectPoseGuide = { viewModel.updatePoseGuide(it) },
+                                isPoseGuideVisible = isPoseGuideVisible,
+                                onTogglePoseGuide = { viewModel.togglePoseGuide(it) }
+                            )
+                            ActiveStudioTab.MAISON_TRYON -> com.example.ui.maison.MaisonBoutiqueHubView(
+                                maisonRepo = viewModel.maisonRepo,
+                                onNavigateToStudio = {}
+                            )
                             ActiveStudioTab.SETTINGS -> SettingsPerformancePanel(
                                 preset = performancePreset,
                                 isPersian = isPersian || isArabic,
@@ -823,6 +849,24 @@ fun CameraHomeScreen(
                                     AppLanguage.ENGLISH -> "Story Live"
                                 },
                                 Icons.Default.LiveTv
+                            ),
+                            Triple(
+                                ActiveStudioTab.WEDDING_STRESS_RELIEF,
+                                when (appLanguage) {
+                                    AppLanguage.PERSIAN -> "آرامش عروسی و نور"
+                                    AppLanguage.ARABIC -> "هدوء العرس والنور"
+                                    AppLanguage.ENGLISH -> "Wedding Zen"
+                                },
+                                Icons.Default.VolunteerActivism
+                            ),
+                            Triple(
+                                ActiveStudioTab.MAISON_TRYON,
+                                when (appLanguage) {
+                                    AppLanguage.PERSIAN -> "پرو مزون و سلبریتی"
+                                    AppLanguage.ARABIC -> "برو الميزون والمشاهير"
+                                    AppLanguage.ENGLISH -> "Maison Fitting"
+                                },
+                                Icons.Default.Checkroom
                             ),
                             Triple(
                                 ActiveStudioTab.SETTINGS,

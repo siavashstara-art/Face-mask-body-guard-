@@ -113,10 +113,13 @@ fun FaceCardMainHostScreen(
                         onPunchStamp = { cardId -> viewModel.faceCardRepo.punchStamp(cardId) }
                     )
                     "ecosystem" -> EcosystemHubScreen(
+                        ecosystemController = viewModel.ecosystemController,
+                        maisonRepo = viewModel.maisonRepo,
                         salonSession = salonSession,
                         sakhtemanPass = sakhtemanPass,
                         marketingStats = marketingStats,
-                        onSimulateDoorUnlock = { /* Simulated unlock */ }
+                        onSimulateDoorUnlock = { /* Simulated unlock */ },
+                        onNavigateToStudio = onNavigateToStudio
                     )
                     else -> FaceCardDashboardScreen(
                         cards = cards,

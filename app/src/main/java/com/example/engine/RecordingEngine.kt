@@ -1,15 +1,10 @@
 package com.example.engine
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.camera.core.CameraSelector
-import androidx.camera.video.FileOutputOptions
-import androidx.camera.video.Quality
-import androidx.camera.video.QualitySelector
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
-import androidx.camera.video.VideoRecordEvent
+import android.content.pm.PackageManager
+import androidx.camera.video.*
 import androidx.core.content.ContextCompat
 import com.example.model.PerformancePreset
 import java.io.File
@@ -31,15 +26,24 @@ class RecordingEngine(
 
     private var videoCapture: VideoCapture<Recorder>? = null
 
-    fun buildVideoCapture(preset: PerformancePreset): VideoCapture<Recorder> {
-        val quality = when (preset) {
+    fun buildVideoCapture(preset: PerformancePreset = PerformancePreset.BALANCED): VideoCapture<Recorder> {
+        val targetQuality = when (preset) {
             PerformancePreset.HIGH -> Quality.FHD
-            else -> Quality.HD // 720p optimal for Redmi Note 8
+            PerformancePreset.LOW_REDMI -> Quality.SD
+            else -> Quality.HD
         }
-        val fallbackStrategy = androidx.camera.video.FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
+
+        // Ordered fallback list to ensure support across all hardware (Qualcomm, MediaTek, Exynos)
+        val qualityList = listOf(targetQuality, Quality.HD, Quality.SD, Quality.LOWEST).distinct()
+        val qualitySelector = QualitySelector.fromOrderedList(
+            qualityList,
+            FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
+        )
+
         val recorder = Recorder.Builder()
-            .setQualitySelector(QualitySelector.from(quality, fallbackStrategy))
+            .setQualitySelector(qualitySelector)
             .build()
+
         val capture = VideoCapture.withOutput(recorder)
         this.videoCapture = capture
         return capture
@@ -51,59 +55,104 @@ class RecordingEngine(
         enableAudio: Boolean = true,
         onEvent: (VideoRecordEvent) -> Unit
     ): File {
-        val capture = videoCapture ?: throw IllegalStateException("VideoCapture is not initialized")
+        // If already recording, stop first before starting new one
+        if (isRecording || activeRecording != null) {
+            stopRecording()
+        }
+
+        val capture = videoCapture ?: buildVideoCapture()
+        outputFile.parentFile?.mkdirs()
+
         val outputOptions = FileOutputOptions.Builder(outputFile).build()
 
-        var pending = capture.output.prepareRecording(context, outputOptions)
-        if (enableAudio) {
+        // Check if RECORD_AUDIO permission is genuinely granted at runtime
+        val hasAudioPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val shouldEnableAudio = enableAudio && hasAudioPermission
+
+        // Attempt 1: Start with audio if enabled & permitted
+        var startedSuccessfully = false
+        if (shouldEnableAudio) {
             try {
-                pending = pending.withAudioEnabled()
-            } catch (_: SecurityException) {
-                // If audio permission is not granted, gracefully proceed with video only
+                val pending = capture.output.prepareRecording(context, outputOptions).withAudioEnabled()
+                activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
+                    handleRecordEvent(event, onEvent)
+                }
+                startedSuccessfully = true
+            } catch (_: Throwable) {
+                // If microphone is busy, locked by another app, or audio initialization fails,
+                // fall back immediately to video-only recording without crashing the app!
+                startedSuccessfully = false
             }
         }
 
-        activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
-            when (event) {
-                is VideoRecordEvent.Start -> {
-                    isRecording = true
-                    isPaused = false
+        // Attempt 2: Fallback to video-only recording
+        if (!startedSuccessfully) {
+            try {
+                val pendingNoAudio = capture.output.prepareRecording(context, outputOptions)
+                activeRecording = pendingNoAudio.start(ContextCompat.getMainExecutor(context)) { event ->
+                    handleRecordEvent(event, onEvent)
                 }
-                is VideoRecordEvent.Pause -> {
-                    isPaused = true
-                }
-                is VideoRecordEvent.Resume -> {
-                    isPaused = false
-                }
-                is VideoRecordEvent.Status -> {
-                    recordingDurationSeconds = event.recordingStats.recordedDurationNanos / 1_000_000_000L
-                }
-                is VideoRecordEvent.Finalize -> {
-                    isRecording = false
-                    isPaused = false
-                    recordingDurationSeconds = 0L
-                }
+                startedSuccessfully = true
+            } catch (t: Throwable) {
+                isRecording = false
+                isPaused = false
+                activeRecording = null
+                throw t
             }
-            onEvent(event)
         }
 
         return outputFile
     }
 
-    fun pauseRecording() {
-        if (isRecording && !isPaused) {
-            activeRecording?.pause()
+    private fun handleRecordEvent(event: VideoRecordEvent, onEvent: (VideoRecordEvent) -> Unit) {
+        when (event) {
+            is VideoRecordEvent.Start -> {
+                isRecording = true
+                isPaused = false
+            }
+            is VideoRecordEvent.Pause -> {
+                isPaused = true
+            }
+            is VideoRecordEvent.Resume -> {
+                isPaused = false
+            }
+            is VideoRecordEvent.Status -> {
+                recordingDurationSeconds = event.recordingStats.recordedDurationNanos / 1_000_000_000L
+            }
+            is VideoRecordEvent.Finalize -> {
+                isRecording = false
+                isPaused = false
+                recordingDurationSeconds = 0L
+                activeRecording = null
+            }
         }
+        onEvent(event)
+    }
+
+    fun pauseRecording() {
+        try {
+            if (isRecording && !isPaused) {
+                activeRecording?.pause()
+            }
+        } catch (_: Throwable) {}
     }
 
     fun resumeRecording() {
-        if (isRecording && isPaused) {
-            activeRecording?.resume()
-        }
+        try {
+            if (isRecording && isPaused) {
+                activeRecording?.resume()
+            }
+        } catch (_: Throwable) {}
     }
 
     fun stopRecording() {
-        activeRecording?.stop()
+        try {
+            activeRecording?.stop()
+        } catch (_: Throwable) {}
         activeRecording = null
         isRecording = false
         isPaused = false
