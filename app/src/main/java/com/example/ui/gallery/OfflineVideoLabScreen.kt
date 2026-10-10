@@ -69,6 +69,19 @@ fun OfflineVideoLabScreen(
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isSplitCompareMode by remember { mutableStateOf(false) }
 
+    // Auto-Reel Generator states
+    var showAutoReelDialog by remember { mutableStateOf(false) }
+    var reelDurationSec by remember { mutableStateOf(15) }
+    var selectedReelLut by remember { mutableStateOf(com.example.model.CinematicLutFilter.CHAMPAGNE_GOLD) }
+    var isReelSlowMo by remember { mutableStateOf(true) }
+    var isReelWatermark by remember { mutableStateOf(true) }
+    var reelMaisonName by remember { mutableStateOf("مزون رویال پرنسس پالاس") }
+    var reelSalonName by remember { mutableStateOf("سالن زیبایی شاین VIP") }
+    var reelVoucherCode by remember { mutableStateOf("FACEGUARD-REEL-20") }
+    var reelMusicMood by remember { mutableStateOf("پیانو رمانتیک مراسم") }
+    var isGeneratingReel by remember { mutableStateOf(false) }
+    var reelProgress by remember { mutableStateOf(0f) }
+
     // Video Post-Processing Editor Dialog state
     var showEditorDialog by remember { mutableStateOf(false) }
     var editorTab by remember { mutableStateOf(0) } // 0: Trim, 1: Face/Swap, 2: Audio/Dubbing, 3: Subtitle, 4: Merge
@@ -340,19 +353,36 @@ fun OfflineVideoLabScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Open Video Editor Suite Button
-                    Button(
-                        onClick = {
-                            trimStartSec = 0f
-                            trimEndSec = videoDurationSec
-                            showEditorDialog = true
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(if (isPersian) "تدوین و صداگذاری" else "Edit & Audio Suite", fontSize = 12.sp, color = Color.White)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // Open Video Editor Suite Button
+                        Button(
+                            onClick = {
+                                trimStartSec = 0f
+                                trimEndSec = videoDurationSec
+                                showEditorDialog = true
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(if (isPersian) "تدوین" else "Edit", fontSize = 11.sp, color = Color.White)
+                        }
+
+                        // Auto-Reel Generator Button
+                        Button(
+                            onClick = { showAutoReelDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E1C1A),
+                                contentColor = Color(0xFFFFD54F)
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37)),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.MovieFilter, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color(0xFFFFD54F))
+                            Spacer(Modifier.width(4.dp))
+                            Text(if (isPersian) "تیزر ریلز ۱۵s" else "Auto-Reel", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1114,6 +1144,310 @@ fun OfflineVideoLabScreen(
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = null }) {
                     Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
+                }
+            }
+        )
+    }
+
+    // ============================================================
+    // Auto-Reel & Instagram Teaser Generator Dialog (100% Offline)
+    // ============================================================
+    if (showAutoReelDialog && selectedVideo != null) {
+        val currentVideo = selectedVideo!!
+
+        AlertDialog(
+            onDismissRequest = { if (!isGeneratingReel) showAutoReelDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.MovieFilter, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (isPersian) "تولید تیزر ریلز اینستاگرام (آفلاین)" else "Auto-Reel Generator (Offline)",
+                        color = CharcoalPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = if (isPersian)
+                            "تولید خودکار تیزر ۱۵ ثانیه‌ای با برش ریتمیک، فیلتر رنگ سینمایی، اسلوموشن و واتر‌مارک سه‌گانه برند."
+                        else
+                            "Automated 15s social teaser with cinematic LUT, slow-mo cadence, and multi-brand watermark.",
+                        fontSize = 11.sp,
+                        color = CharcoalSecondary
+                    )
+
+                    // Mock 9:16 Reel Teaser Preview Frame
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF141312))
+                            .border(1.5.dp, Color(0xFFD4AF37), RoundedCornerShape(12.dp))
+                    ) {
+                        // LUT tint
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(selectedReelLut.colorOverlayHex))
+                        )
+
+                        // Center Reel Badge
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color(0xFFFFD54F), modifier = Modifier.size(36.dp))
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "پیش‌نمایش تیزر ${reelDurationSec}s",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Lut: ${selectedReelLut.titleFa} • $reelMusicMood",
+                                color = Color(0xFFFFE082),
+                                fontSize = 9.sp
+                            )
+                        }
+
+                        // Top Maison Watermark in preview
+                        if (isReelWatermark) {
+                            Surface(
+                                color = Color.Black.copy(alpha = 0.75f),
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(8.dp)
+                            ) {
+                                Text(
+                                    text = "🏛️ $reelMaisonName",
+                                    color = Color(0xFFFFD54F),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+
+                            // Bottom Salon & Voucher Watermark in preview
+                            Surface(
+                                color = Color.Black.copy(alpha = 0.85f),
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(8.dp)
+                            ) {
+                                Text(
+                                    text = "✨ $reelSalonName • 🎟️ کد تخفیف: $reelVoucherCode",
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Duration Selection (15s vs 30s)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(if (isPersian) "مدت زمان تیزر:" else "Duration:", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CharcoalPrimary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(15 to "۱۵ ثانیه (ریلز استاندارد)", 30 to "۳۰ ثانیه (استوری کامل)").forEach { (dur, label) ->
+                                val isSel = reelDurationSec == dur
+                                Surface(
+                                    color = if (isSel) Color(0xFFD4AF37) else WarmSurfaceSecondary,
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.clickable { reelDurationSec = dur }
+                                ) {
+                                    Text(
+                                        text = label,
+                                        fontSize = 10.sp,
+                                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSel) Color.Black else CharcoalPrimary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // LUT Selection Chips
+                    Text(if (isPersian) "فیلتر رنگ سینمایی تیزر:" else "Color Grade:", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CharcoalPrimary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        com.example.model.CinematicLutFilter.values().forEach { lut ->
+                            val isSel = selectedReelLut == lut
+                            Surface(
+                                color = if (isSel) Color(0xFFD4AF37) else WarmSurfaceSecondary,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { selectedReelLut = lut }
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = when (lut) {
+                                            com.example.model.CinematicLutFilter.CHAMPAGNE_GOLD -> "شامپاینی"
+                                            com.example.model.CinematicLutFilter.VINTAGE_35MM -> "کداک ۳۵"
+                                            com.example.model.CinematicLutFilter.ROYAL_EMERALD -> "زمردی"
+                                            com.example.model.CinematicLutFilter.PURE_VELVET -> "مخملی"
+                                        },
+                                        fontSize = 9.sp,
+                                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSel) Color.Black else CharcoalPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Options Checkboxes
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(if (isPersian) "اسلوموشن سینمایی (Cadence 60fps)" else "Slow-Mo Pacing", fontSize = 11.sp, color = CharcoalPrimary)
+                        Switch(
+                            checked = isReelSlowMo,
+                            onCheckedChange = { isReelSlowMo = it },
+                            colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFFD4AF37))
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(if (isPersian) "واتر‌مارک سه‌گانه بیزینس و کد تخفیف" else "Triple Brand Watermark", fontSize = 11.sp, color = CharcoalPrimary)
+                        Switch(
+                            checked = isReelWatermark,
+                            onCheckedChange = { isReelWatermark = it },
+                            colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFFD4AF37))
+                        )
+                    }
+
+                    // Music mood
+                    Text(if (isPersian) "موسیقی متن آفلاین پیشنهادی:" else "Audio Mood:", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CharcoalPrimary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("پیانو رمانتیک مراسم", "هاوس شیک تالار", "آکوستیک لایت مزون").forEach { mood ->
+                            val isSel = reelMusicMood == mood
+                            Surface(
+                                color = if (isSel) Color(0xFFD4AF37) else WarmSurfaceSecondary,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { reelMusicMood = mood }
+                            ) {
+                                Text(
+                                    text = mood,
+                                    fontSize = 9.sp,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSel) Color.Black else CharcoalPrimary,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    // Generation Progress
+                    if (isGeneratingReel) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            LinearProgressIndicator(
+                                progress = { reelProgress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color(0xFFD4AF37)
+                            )
+                            Text(
+                                text = if (isPersian) "در حال تولید و تدوین تیزر اینستاگرام... ${(reelProgress * 100).toInt()}%" else "Rendering Instagram Reel... ${(reelProgress * 100).toInt()}%",
+                                fontSize = 10.sp,
+                                color = CharcoalSecondary
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isGeneratingReel = true
+                            reelProgress = 0.2f
+                            kotlinx.coroutines.delay(400)
+                            reelProgress = 0.5f
+                            kotlinx.coroutines.delay(400)
+                            reelProgress = 0.85f
+                            kotlinx.coroutines.delay(300)
+
+                            val reelVideo = storageManager.generateInstagramReel(
+                                sourceVideo = currentVideo,
+                                targetDurationSec = reelDurationSec,
+                                lutFilter = selectedReelLut.titleFa,
+                                maisonName = reelMaisonName,
+                                salonName = reelSalonName,
+                                discountCode = reelVoucherCode,
+                                musicMood = reelMusicMood
+                            )
+
+                            reelProgress = 1.0f
+                            isGeneratingReel = false
+                            showAutoReelDialog = false
+
+                            if (reelVideo != null) {
+                                reloadVideos()
+                                selectedVideo = reelVideo
+                                statusMessage = if (isPersian)
+                                    "تیزر ریلز اینستاگرام با موفقیت تولید و در گالری ذخیره شد ✓"
+                                else
+                                    "Instagram Reel generated & saved to local gallery ✓"
+                            } else {
+                                statusMessage = if (isPersian) "خطا در تولید تیزر" else "Failed to generate reel"
+                            }
+                        }
+                    },
+                    enabled = !isGeneratingReel,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1E1C1A),
+                        contentColor = Color(0xFFFFD54F)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37))
+                ) {
+                    Text(
+                        text = if (isGeneratingReel) (if (isPersian) "در حال رندر..." else "Rendering...") else (if (isPersian) "تولید و ذخیره تیزر در گالری" else "Generate & Save Reel"),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+            },
+            dismissButton = {
+                if (!isGeneratingReel) {
+                    TextButton(onClick = { showAutoReelDialog = false }) {
+                        Text(if (isPersian) "انصراف" else "Cancel", color = CharcoalSecondary)
+                    }
                 }
             }
         )

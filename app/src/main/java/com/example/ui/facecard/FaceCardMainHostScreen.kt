@@ -126,7 +126,8 @@ fun FaceCardMainHostScreen(
                         activeCardId = activeCardId,
                         onSelectCard = { cardId -> viewModel.faceCardRepo.selectActiveCard(cardId) },
                         onShareVCard = { card -> viewModel.faceCardRepo.exportAndShareVCard(card) },
-                        onNavigateToStudio = onNavigateToStudio
+                        onNavigateToStudio = onNavigateToStudio,
+                        onNavigateToAdmin = { viewModel.navigateTo("admin") }
                     )
                 }
             }

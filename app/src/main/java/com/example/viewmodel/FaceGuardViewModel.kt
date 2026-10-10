@@ -23,6 +23,7 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
     val faceCardRepo = com.example.engine.FaceCardRepository(application)
     val ecosystemController = com.example.engine.EcosystemMasterController(application)
     val maisonRepo = com.example.engine.MaisonBoutiqueRepository(application)
+    val adminRepo = com.example.engine.AdminManagerRepository(application)
 
     // Config states
     private val _privacyConfig = MutableStateFlow(PrivacyConfig())
@@ -100,6 +101,24 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _isPoseGuideVisible = MutableStateFlow(false)
     val isPoseGuideVisible: StateFlow<Boolean> = _isPoseGuideVisible.asStateFlow()
+
+    // Cinematic Ghost-Guide Director State
+    private val _cinematicDirectorConfig = MutableStateFlow(CinematicDirectorConfig())
+    val cinematicDirectorConfig: StateFlow<CinematicDirectorConfig> = _cinematicDirectorConfig.asStateFlow()
+
+    fun updateCinematicDirectorConfig(config: CinematicDirectorConfig) {
+        _cinematicDirectorConfig.value = config
+    }
+
+    fun toggleDirectorMode(enabled: Boolean? = null) {
+        val next = enabled ?: !_cinematicDirectorConfig.value.isEnabled
+        _cinematicDirectorConfig.value = _cinematicDirectorConfig.value.copy(isEnabled = next)
+        _statusMessage.value = if (_isPersian.value) {
+            if (next) "دایرکتور سینمایی لحظه‌به‌لحظه فعال شد 🎬" else "دایرکتور سینمایی غیرفعال شد"
+        } else {
+            if (next) "Cinematic Ghost-Guide activated 🎬" else "Cinematic Ghost-Guide turned off"
+        }
+    }
 
     fun updateLightTime(time: WeddingDayLightTime) {
         _selectedLightTime.value = time
@@ -447,6 +466,12 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
                         when (event) {
                             is androidx.camera.video.VideoRecordEvent.Start -> {
                                 _isRecording.value = true
+                                val activeMaison = maisonRepo.activeGarment.value
+                                if (activeMaison != null) {
+                                    _cinematicDirectorConfig.value = _cinematicDirectorConfig.value.copy(
+                                        partnerMaisonName = activeMaison.maisonName
+                                    )
+                                }
                                 _statusMessage.value = if (_isPersian.value) "فیلمبرداری امن آغاز شد" else "Private recording started"
                             }
                             is androidx.camera.video.VideoRecordEvent.Finalize -> {
@@ -459,7 +484,17 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
                                 }
                             }
                             is androidx.camera.video.VideoRecordEvent.Status -> {
-                                _recordingDurationSec.value = recordingEngine.recordingDurationSeconds
+                                val sec = recordingEngine.recordingDurationSeconds
+                                _recordingDurationSec.value = sec
+                                if (_cinematicDirectorConfig.value.isEnabled && _cinematicDirectorConfig.value.autoAdvanceWithTimer) {
+                                    val cycleSec = (sec % 16).toInt()
+                                    val planIdx = (cycleSec / 4).coerceIn(0, 3)
+                                    val countdown = 4 - (cycleSec % 4)
+                                    _cinematicDirectorConfig.value = _cinematicDirectorConfig.value.copy(
+                                        currentSceneIndex = planIdx,
+                                        countdownToNextCue = countdown
+                                    )
+                                }
                             }
                         }
                     }

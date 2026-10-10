@@ -66,6 +66,8 @@ fun CameraHomeScreen(
     val selectedLightTime by viewModel.selectedLightTime.collectAsStateWithLifecycle()
     val selectedPoseGuide by viewModel.selectedPoseGuide.collectAsStateWithLifecycle()
     val isPoseGuideVisible by viewModel.isPoseGuideVisible.collectAsStateWithLifecycle()
+    val cinematicDirectorConfig by viewModel.cinematicDirectorConfig.collectAsStateWithLifecycle()
+    val smartCameraConfig by viewModel.adminRepo.smartCameraConfig.collectAsStateWithLifecycle()
     val activeMaisonGarment by viewModel.maisonRepo.activeGarment.collectAsStateWithLifecycle()
 
     val isPersian = appLanguage == AppLanguage.PERSIAN
@@ -116,6 +118,8 @@ fun CameraHomeScreen(
             selectedLightTime = selectedLightTime,
             selectedPoseGuide = selectedPoseGuide,
             isPoseGuideVisible = isPoseGuideVisible,
+            cinematicDirectorConfig = cinematicDirectorConfig,
+            smartCameraConfig = smartCameraConfig,
             activeMaisonGarment = activeMaisonGarment,
             onTapAddManualZone = { offset ->
                 viewModel.addManualPrivacyZone(offset, overlayWidth, overlayHeight)
@@ -275,6 +279,74 @@ fun CameraHomeScreen(
                                 color = if (isSimpleMode) SageGreen else CharcoalPrimary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
+                    // Quick Director Button (دایرکتور سینمایی)
+                    Surface(
+                        color = if (cinematicDirectorConfig.isEnabled) Color(0xFFD4AF37) else WarmSurface.copy(alpha = 0.88f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (cinematicDirectorConfig.isEnabled) Color(0xFFFFD54F) else WarmBorder
+                        ),
+                        modifier = Modifier.clickable { viewModel.toggleDirectorMode() }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.MovieFilter,
+                                contentDescription = null,
+                                tint = if (cinematicDirectorConfig.isEnabled) Color.Black else CharcoalSecondary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text(
+                                text = if (isPersian) "دایرکتور" else "Director",
+                                color = if (cinematicDirectorConfig.isEnabled) Color.Black else CharcoalPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Quick Auto-Framing & Lighting Enhancer Button
+                    Surface(
+                        color = if (smartCameraConfig.isAutoFramingEnabled) Color(0xFF2E7D32) else WarmSurface.copy(alpha = 0.88f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (smartCameraConfig.isAutoFramingEnabled) Color(0xFF81C784) else WarmBorder
+                        ),
+                        modifier = Modifier.clickable {
+                            val next = !smartCameraConfig.isAutoFramingEnabled
+                            viewModel.adminRepo.updateSmartCameraConfig(
+                                smartCameraConfig.copy(
+                                    isAutoFramingEnabled = next,
+                                    isLightingEnhancerEnabled = next
+                                )
+                            )
+                        }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.CenterFocusStrong,
+                                contentDescription = null,
+                                tint = if (smartCameraConfig.isAutoFramingEnabled) Color.White else CharcoalSecondary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text(
+                                text = if (isPersian) "کادربندی" else "Auto-Frame",
+                                color = if (smartCameraConfig.isAutoFramingEnabled) Color.White else CharcoalPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -762,6 +834,12 @@ fun CameraHomeScreen(
                                 maisonRepo = viewModel.maisonRepo,
                                 onNavigateToStudio = {}
                             )
+                            ActiveStudioTab.CINEMATIC_DIRECTOR -> com.example.ui.panels.CinematicDirectorPanel(
+                                config = cinematicDirectorConfig,
+                                onUpdateConfig = { viewModel.updateCinematicDirectorConfig(it) },
+                                activeGarment = activeMaisonGarment,
+                                isPersian = isPersian || isArabic
+                            )
                             ActiveStudioTab.SETTINGS -> SettingsPerformancePanel(
                                 preset = performancePreset,
                                 isPersian = isPersian || isArabic,
@@ -858,6 +936,15 @@ fun CameraHomeScreen(
                                     AppLanguage.ENGLISH -> "Wedding Zen"
                                 },
                                 Icons.Default.VolunteerActivism
+                            ),
+                            Triple(
+                                ActiveStudioTab.CINEMATIC_DIRECTOR,
+                                when (appLanguage) {
+                                    AppLanguage.PERSIAN -> "دایرکتور سینمایی"
+                                    AppLanguage.ARABIC -> "المخرج السينمائي"
+                                    AppLanguage.ENGLISH -> "Cinematic Director"
+                                },
+                                Icons.Default.MovieFilter
                             ),
                             Triple(
                                 ActiveStudioTab.MAISON_TRYON,

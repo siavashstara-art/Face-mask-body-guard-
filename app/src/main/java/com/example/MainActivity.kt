@@ -104,6 +104,10 @@ class MainActivity : ComponentActivity() {
                                             onNavigateBackToFaceCard = { viewModel.navigateTo("facecard") }
                                         )
                                     }
+                                    "admin" -> com.example.ui.admin.AdminDashboardScreen(
+                                        adminRepo = viewModel.adminRepo,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") }
+                                    )
                                     else -> FaceCardMainHostScreen(
                                         viewModel = viewModel,
                                         onNavigateToStudio = { viewModel.navigateTo("camera") },

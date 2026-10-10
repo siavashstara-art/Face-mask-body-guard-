@@ -39,7 +39,8 @@ fun FaceCardDashboardScreen(
     activeCardId: String,
     onSelectCard: (String) -> Unit,
     onShareVCard: (BusinessCardProfile) -> Unit,
-    onNavigateToStudio: () -> Unit
+    onNavigateToStudio: () -> Unit,
+    onNavigateToAdmin: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activeCard = cards.find { it.id == activeCardId } ?: cards.first()
@@ -75,15 +76,28 @@ fun FaceCardDashboardScreen(
                 )
             }
 
-            // Quick Studio Portrait camera shortcut
-            IconButton(
-                onClick = onNavigateToStudio,
-                modifier = Modifier
-                    .size(42.dp)
-                    .background(WarmSurface, CircleShape)
-                    .border(1.dp, WarmBorder, CircleShape)
-            ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = "Camera Studio", tint = TerracottaAccent)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Admin Dashboard Master Access (پنل انحصاری مدیریت)
+                IconButton(
+                    onClick = onNavigateToAdmin,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(Color(0xFF1E1C1A), CircleShape)
+                        .border(1.dp, Color(0xFFD4AF37), CircleShape)
+                ) {
+                    Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin Panel", tint = Color(0xFFFFD54F))
+                }
+
+                // Quick Studio Portrait camera shortcut
+                IconButton(
+                    onClick = onNavigateToStudio,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(WarmSurface, CircleShape)
+                        .border(1.dp, WarmBorder, CircleShape)
+                ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = "Camera Studio", tint = TerracottaAccent)
+                }
             }
         }
 

@@ -5,15 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -84,6 +76,8 @@ fun PrivacyCameraOverlay(
     selectedLightTime: WeddingDayLightTime = WeddingDayLightTime.NATURAL_GARDEN_DAY,
     selectedPoseGuide: ConfidencePoseGuideType = ConfidencePoseGuideType.GRAND_ENTRY,
     isPoseGuideVisible: Boolean = false,
+    cinematicDirectorConfig: com.example.model.CinematicDirectorConfig = com.example.model.CinematicDirectorConfig(),
+    smartCameraConfig: com.example.model.SmartCameraFeatureConfig = com.example.model.SmartCameraFeatureConfig(),
     activeMaisonGarment: MaisonGarmentItem? = null,
     onTapAddManualZone: (Offset) -> Unit = {}
 ) {
@@ -345,6 +339,72 @@ fun PrivacyCameraOverlay(
                     style = Stroke(width = 2.0f)
                 )
             }
+
+            // 4e-2. Cinematic Timeline Ghost-Guide & LUT Color Grading (دایرکتور سینمایی)
+            if (cinematicDirectorConfig.isEnabled) {
+                // Cinematic Color Grading LUT
+                drawRect(
+                    color = Color(cinematicDirectorConfig.selectedLut.colorOverlayHex),
+                    topLeft = Offset(0f, 0f),
+                    size = Size(canvasW, canvasH)
+                )
+
+                // 9:16 Instagram Reel & Story Safe Zone Grid Lines
+                if (cinematicDirectorConfig.showInstagramReelFrame) {
+                    val reelSafeColor = Color(0xFFFFD54F).copy(alpha = 0.35f)
+                    // Top story safe line (12% from top)
+                    drawLine(reelSafeColor, Offset(0f, canvasH * 0.12f), Offset(canvasW, canvasH * 0.12f), strokeWidth = 1.2f)
+                    // Bottom reel safe line (18% from bottom)
+                    drawLine(reelSafeColor, Offset(0f, canvasH * 0.82f), Offset(canvasW, canvasH * 0.82f), strokeWidth = 1.2f)
+                }
+
+                // Render Animated Ghost Silhouette for the active scene
+                if (cinematicDirectorConfig.showGhostSilhouette) {
+                    drawCinematicGhostSilhouette(canvasW, canvasH, cinematicDirectorConfig)
+                }
+            }
+
+            // 4e-3. Smart Auto-Framing & Horizon Leveler (کادربندی خودکار و تراز افقی)
+            if (smartCameraConfig.isAutoFramingEnabled) {
+                // Horizon Leveler Bar (تراز افقی ژیروسکوپ)
+                val levelColor = if (kotlin.math.abs(smartCameraConfig.horizonTiltAngle) <= 1.0f) Color(0xFF4CAF50) else Color(0xFFFFC107)
+                val horizonY = canvasH * 0.50f
+                val barHalfW = canvasW * 0.16f
+                drawLine(
+                    color = levelColor.copy(alpha = 0.75f),
+                    start = Offset(canvasW * 0.5f - barHalfW, horizonY),
+                    end = Offset(canvasW * 0.5f + barHalfW, horizonY),
+                    strokeWidth = 2.0f
+                )
+                drawCircle(color = levelColor, radius = 3.5f, center = Offset(canvasW * 0.5f, horizonY))
+
+                // Golden Framing Bracket Marks around Subject
+                val bLeft = canvasW * 0.20f
+                val bRight = canvasW * 0.80f
+                val bTop = canvasH * 0.16f
+                val bBottom = canvasH * 0.84f
+                val bLen = 28f
+                val bStroke = 2.4f
+                val bracketColor = Color(0xFFFFD54F).copy(alpha = 0.85f)
+
+                drawLine(bracketColor, Offset(bLeft, bTop), Offset(bLeft + bLen, bTop), bStroke)
+                drawLine(bracketColor, Offset(bLeft, bTop), Offset(bLeft, bTop + bLen), bStroke)
+                drawLine(bracketColor, Offset(bRight, bTop), Offset(bRight - bLen, bTop), bStroke)
+                drawLine(bracketColor, Offset(bRight, bTop), Offset(bRight, bTop + bLen), bStroke)
+                drawLine(bracketColor, Offset(bLeft, bBottom), Offset(bLeft + bLen, bBottom), bStroke)
+                drawLine(bracketColor, Offset(bLeft, bBottom), Offset(bLeft, bBottom - bLen), bStroke)
+                drawLine(bracketColor, Offset(bRight, bBottom), Offset(bRight - bLen, bBottom), bStroke)
+                drawLine(bracketColor, Offset(bRight, bBottom), Offset(bRight, bBottom - bLen), bStroke)
+            }
+
+            // Offline Lighting Enhancer Ambient Boost
+            if (smartCameraConfig.isLightingEnhancerEnabled) {
+                drawRect(
+                    color = Color(0xFFFFFDE7).copy(alpha = (smartCameraConfig.lightingBoostLevel * 0.18f).coerceIn(0.04f, 0.25f)),
+                    topLeft = Offset(0f, 0f),
+                    size = Size(canvasW, canvasH)
+                )
+            }
         }
 
         // 4f. Partner Maison Boutique Badge on Camera Viewfinder
@@ -513,6 +573,207 @@ fun PrivacyCameraOverlay(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
                     )
+                }
+            }
+        }
+
+        // 10. Cinematic Timeline Ghost-Guide Overlays & Director Prompts
+        if (cinematicDirectorConfig.isEnabled) {
+            val scenes = com.example.model.CinematicTimelineRegistry.getScenesForScenario(cinematicDirectorConfig.selectedScenario)
+            val currentScene = scenes.getOrElse(cinematicDirectorConfig.currentSceneIndex) { scenes.first() }
+
+            // 10a. Top Director Timeline Progress Header
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 80.dp, start = 16.dp, end = 16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Scenario & Plan indicator badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xE61A1815))
+                            .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "🎬 دایرکتور سینمایی: ${currentScene.titleFa}",
+                            color = Color(0xFFFFE082),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xE61A1815))
+                            .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "⏱ ${cinematicDirectorConfig.countdownToNextCue} ثانیه تا پلان بعد",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // 4-step Timeline Progress Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    scenes.forEachIndexed { index, _ ->
+                        val isCurrent = index == cinematicDirectorConfig.currentSceneIndex
+                        val isPassed = index < cinematicDirectorConfig.currentSceneIndex
+                        val barColor = when {
+                            isCurrent -> Color(0xFFFFD54F)
+                            isPassed -> Color(0xFF81C784)
+                            else -> Color.White.copy(alpha = 0.25f)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(if (isCurrent) 5.dp else 3.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(barColor)
+                        )
+                    }
+                }
+            }
+
+            // 10b. Center / Floating Director Live Cue Banner
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xCC1A1815))
+                    .border(1.5.dp, Color(0xFFFFD54F).copy(alpha = 0.85f), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "📢 دستور لحظه‌ای کارگردان:",
+                        color = Color(0xFFFFD54F),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = currentScene.directorCueFa,
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Text(
+                        text = "💡 ${currentScene.motionTipFa}",
+                        color = Color(0xFFE0E0E0),
+                        fontSize = 10.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+
+            // 10c. Triple-Brand Business Watermark Banners
+            if (cinematicDirectorConfig.showTripleBrandingWatermark) {
+                // Top Brand Banner (Maison)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 14.dp, top = 145.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xD90D0C0B))
+                        .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "🏛️ ${cinematicDirectorConfig.partnerMaisonName} • 👗 ${activeMaisonGarment?.titleFa ?: "کالکشن لباس عروس"}",
+                        color = Color(0xFFFFE082),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Bottom Brand Banner (Salon & Voucher)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 125.dp, start = 16.dp, end = 16.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xE60D0C0B))
+                        .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "✨ سالن پارتنر: ${cinematicDirectorConfig.partnerSalonName}",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "•",
+                            color = Color(0xFFFFD54F),
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            text = "🎟️ کد تخفیف: ${cinematicDirectorConfig.referralDiscountCode}",
+                            color = Color(0xFFFFD54F),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+
+        // 11. Smart Auto-Framing & Offline Lighting Enhancer Live Guidance Pill
+        if (smartCameraConfig.isAutoFramingEnabled || smartCameraConfig.isLightingEnhancerEnabled) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 14.dp, bottom = 100.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xCC1A1815))
+                    .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF4CAF50)))
+                    Text(
+                        text = "📐 ${smartCameraConfig.framingStateFa}",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (smartCameraConfig.isStabilizerActive) {
+                        Text(text = "•", color = Color(0xFFFFD54F), fontSize = 10.sp)
+                        Text(
+                            text = "تثبیت پایدار EIS فعال",
+                            color = Color(0xFFFFD54F),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -1226,3 +1487,196 @@ private fun DrawScope.drawDigitalMakeup(
         )
     }
 }
+
+// ----------------- Helper: Cinematic Timeline Ghost-Guide Silhouettes -----------------
+private fun DrawScope.drawCinematicGhostSilhouette(
+    canvasW: Float,
+    canvasH: Float,
+    config: com.example.model.CinematicDirectorConfig
+) {
+    val scenes = com.example.model.CinematicTimelineRegistry.getScenesForScenario(config.selectedScenario)
+    val activeScene = scenes.getOrElse(config.currentSceneIndex) { scenes.first() }
+    val glowColor = Color(0xFFFFD54F).copy(alpha = config.ghostAlpha)
+    val strokeWidth = 2.6f
+
+    when (activeScene.poseShape) {
+        com.example.model.GhostPoseShapeType.BRIDE_MIRROR_VEIL -> {
+            // Silhouette of bride in mirror with veil
+            val headCx = canvasW * 0.50f
+            val headCy = canvasH * 0.32f
+            val headR = canvasW * 0.14f
+
+            // Head oval
+            drawOval(
+                color = glowColor,
+                topLeft = Offset(headCx - headR * 0.85f, headCy - headR),
+                size = Size(headR * 1.7f, headR * 2f),
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Veil flowing curves
+            val veilPath = Path().apply {
+                moveTo(headCx - headR, headCy - headR * 0.5f)
+                cubicTo(
+                    headCx - headR * 1.6f, headCy + headR,
+                    headCx - headR * 1.8f, headCy + headR * 3f,
+                    headCx - headR * 0.4f, canvasH * 0.72f
+                )
+                moveTo(headCx + headR, headCy - headR * 0.5f)
+                cubicTo(
+                    headCx + headR * 1.6f, headCy + headR,
+                    headCx + headR * 1.8f, headCy + headR * 3f,
+                    headCx + headR * 0.4f, canvasH * 0.72f
+                )
+            }
+            drawPath(veilPath, color = glowColor.copy(alpha = config.ghostAlpha * 0.75f), style = Stroke(width = 1.8f))
+
+            // Mirror reflection arch
+            drawArc(
+                color = glowColor.copy(alpha = config.ghostAlpha * 0.55f),
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = Offset(canvasW * 0.15f, canvasH * 0.12f),
+                size = Size(canvasW * 0.70f, canvasH * 0.60f),
+                style = Stroke(width = 1.6f)
+            )
+        }
+        com.example.model.GhostPoseShapeType.DRESS_360_SPIN -> {
+            // Silhouette of wedding gown with 360 rotation guide
+            val cx = canvasW * 0.5f
+            val waistY = canvasH * 0.42f
+            val skirtBottomY = canvasH * 0.78f
+
+            // Corset / Bodice outline
+            val bodicePath = Path().apply {
+                moveTo(cx - canvasW * 0.12f, waistY - canvasH * 0.14f)
+                lineTo(cx - canvasW * 0.08f, waistY)
+                lineTo(cx + canvasW * 0.08f, waistY)
+                lineTo(cx + canvasW * 0.12f, waistY - canvasH * 0.14f)
+            }
+            drawPath(bodicePath, color = glowColor, style = Stroke(width = strokeWidth))
+
+            // Flared Ballgown Skirt outline
+            val skirtPath = Path().apply {
+                moveTo(cx - canvasW * 0.08f, waistY)
+                cubicTo(
+                    cx - canvasW * 0.22f, waistY + canvasH * 0.15f,
+                    cx - canvasW * 0.38f, skirtBottomY - canvasH * 0.05f,
+                    cx - canvasW * 0.36f, skirtBottomY
+                )
+                lineTo(cx + canvasW * 0.36f, skirtBottomY)
+                cubicTo(
+                    cx + canvasW * 0.38f, skirtBottomY - canvasH * 0.05f,
+                    cx + canvasW * 0.22f, waistY + canvasH * 0.15f,
+                    cx + canvasW * 0.08f, waistY
+                )
+            }
+            drawPath(skirtPath, color = glowColor, style = Stroke(width = strokeWidth))
+
+            // Circular 360 Spin Ellipse on floor
+            drawOval(
+                color = glowColor.copy(alpha = config.ghostAlpha * 0.85f),
+                topLeft = Offset(cx - canvasW * 0.42f, skirtBottomY - 24f),
+                size = Size(canvasW * 0.84f, 48f),
+                style = Stroke(width = 2.0f)
+            )
+
+            // Rotation arrow arc
+            drawArc(
+                color = Color(0xFFFFD54F).copy(alpha = (config.ghostAlpha * 1.2f).coerceAtMost(1f)),
+                startAngle = 10f,
+                sweepAngle = 140f,
+                useCenter = false,
+                topLeft = Offset(cx - canvasW * 0.46f, skirtBottomY - 32f),
+                size = Size(canvasW * 0.92f, 64f),
+                style = Stroke(width = 3.2f)
+            )
+        }
+        com.example.model.GhostPoseShapeType.CAR_KEYS_RING -> {
+            val cx = canvasW * 0.5f
+            val cy = canvasH * 0.45f
+
+            // Key fob outline
+            val keyW = canvasW * 0.20f
+            val keyH = canvasH * 0.16f
+            drawRoundRect(
+                color = glowColor,
+                topLeft = Offset(cx - keyW / 2f, cy - keyH / 2f),
+                size = Size(keyW, keyH),
+                cornerRadius = CornerRadius(16f, 16f),
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Wedding Ring glowing circles
+            drawCircle(
+                color = Color(0xFFFFD700).copy(alpha = config.ghostAlpha),
+                radius = canvasW * 0.08f,
+                center = Offset(cx - canvasW * 0.15f, cy + canvasH * 0.10f),
+                style = Stroke(width = 3.0f)
+            )
+            drawCircle(
+                color = Color(0xFFFFD700).copy(alpha = config.ghostAlpha),
+                radius = canvasW * 0.08f,
+                center = Offset(cx + canvasW * 0.05f, cy + canvasH * 0.10f),
+                style = Stroke(width = 3.0f)
+            )
+
+            // Car hood perspective arc
+            drawArc(
+                color = glowColor.copy(alpha = config.ghostAlpha * 0.45f),
+                startAngle = 200f,
+                sweepAngle = 140f,
+                useCenter = false,
+                topLeft = Offset(canvasW * 0.05f, canvasH * 0.65f),
+                size = Size(canvasW * 0.90f, canvasH * 0.30f),
+                style = Stroke(width = 2.0f)
+            )
+        }
+        com.example.model.GhostPoseShapeType.GRAND_ENTRY_ROYAL -> {
+            val cx = canvasW * 0.5f
+
+            // Couple regal silhouette: Groom left, Bride right linked-arm
+            // Groom head & shoulders
+            drawOval(
+                color = glowColor,
+                topLeft = Offset(cx - canvasW * 0.25f, canvasH * 0.24f),
+                size = Size(canvasW * 0.16f, canvasW * 0.20f),
+                style = Stroke(width = strokeWidth)
+            )
+            // Bride head & shoulders
+            drawOval(
+                color = glowColor,
+                topLeft = Offset(cx + canvasW * 0.09f, canvasH * 0.26f),
+                size = Size(canvasW * 0.14f, canvasW * 0.18f),
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Linked-arm curve
+            val linkPath = Path().apply {
+                moveTo(cx - canvasW * 0.14f, canvasH * 0.42f)
+                cubicTo(
+                    cx - canvasW * 0.02f, canvasH * 0.46f,
+                    cx + canvasW * 0.05f, canvasH * 0.46f,
+                    cx + canvasW * 0.15f, canvasH * 0.43f
+                )
+            }
+            drawPath(linkPath, color = glowColor, style = Stroke(width = 3.0f))
+
+            // Red carpet perspective lines
+            drawLine(
+                color = glowColor.copy(alpha = config.ghostAlpha * 0.6f),
+                start = Offset(cx - canvasW * 0.12f, canvasH * 0.62f),
+                end = Offset(0f, canvasH * 0.95f),
+                strokeWidth = 2.0f
+            )
+            drawLine(
+                color = glowColor.copy(alpha = config.ghostAlpha * 0.6f),
+                start = Offset(cx + canvasW * 0.12f, canvasH * 0.62f),
+                end = Offset(canvasW, canvasH * 0.95f),
+                strokeWidth = 2.0f
+            )
+        }
+    }
+}
+

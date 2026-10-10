@@ -25,6 +25,7 @@ enum class ActiveStudioTab {
     CATALOG,
     WEDDING_STRESS_RELIEF,
     MAISON_TRYON,
+    CINEMATIC_DIRECTOR,
     SETTINGS
 }
 
