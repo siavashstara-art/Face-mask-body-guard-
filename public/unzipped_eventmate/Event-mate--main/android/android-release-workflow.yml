@@ -1,0 +1,121 @@
+name: EventMate VIP — Signed APK & AAB Auto-Release
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build & Sign Offline APK + AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Build Web App into APK Assets
+        run: |
+          mkdir -p android/app/src/main/assets/www
+          npm install --legacy-peer-deps || npm install
+          npm install react-is --legacy-peer-deps || true
+          npx vite build --base=./
+          cp -r dist/* android/app/src/main/assets/www/
+          echo "" > android/app/src/main/assets/www/registerSW.js
+
+      - name: 4. Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 5. Accept Android Licenses
+        run: |
+          export SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          mkdir -p "$SDK/licenses"
+          printf "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n" > "$SDK/licenses/android-sdk-license"
+          printf "\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910\n" > "$SDK/licenses/android-sdk-preview-license"
+
+      - name: 6. Update MainActivity for Offline APK Assets
+        run: |
+          mkdir -p android/app/src/main/java/com/eventmate/vip
+          printf '%s\n' \
+            'package com.eventmate.vip;' \
+            'import android.app.Activity;' \
+            'import android.content.Intent;' \
+            'import android.net.Uri;' \
+            'import android.os.Bundle;' \
+            'import android.webkit.*;' \
+            'import androidx.webkit.WebViewAssetLoader;' \
+            'public class MainActivity extends Activity {' \
+            '  private WebView w;' \
+            '  @Override' \
+            '  protected void onCreate(Bundle b) {' \
+            '    super.onCreate(b);' \
+            '    w = new WebView(this);' \
+            '    setContentView(w);' \
+            '    WebSettings s = w.getSettings();' \
+            '    s.setJavaScriptEnabled(true);' \
+            '    s.setDomStorageEnabled(true);' \
+            '    s.setAllowFileAccess(true);' \
+            '    final WebViewAssetLoader a = new WebViewAssetLoader.Builder()' \
+            '      .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))' \
+            '      .build();' \
+            '    w.setWebChromeClient(new WebChromeClient());' \
+            '    w.setWebViewClient(new WebViewClient() {' \
+            '      @Override' \
+            '      public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {' \
+            '        return a.shouldInterceptRequest(r.getUrl());' \
+            '      }' \
+            '      @Override' \
+            '      public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {' \
+            '        Uri u = r.getUrl();' \
+            '        if ("appassets.androidplatform.net".equals(u.getHost())) return false;' \
+            '        try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception e) {}' \
+            '        return true;' \
+            '      }' \
+            '    });' \
+            '    w.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");' \
+            '  }' \
+            '}' > android/app/src/main/java/com/eventmate/vip/MainActivity.java
+
+      - name: 7. Build Signed APK & AAB via Gradle
+        working-directory: ./android
+        run: |
+          rm -f eventmate-release.keystore
+          keytool -genkeypair -v -keystore eventmate-release.keystore -alias eventmate_vip -keyalg RSA -keysize 2048 -validity 10000 -storepass EventMateVIP2026 -keypass EventMateVIP2026 -dname "CN=EventMate VIP, OU=FBNM, O=EventMate, L=Tehran, S=Tehran, C=IR"
+          curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          ./gradle-8.7/bin/gradle assembleRelease bundleRelease --no-daemon
+
+      - name: 8. Package Outputs
+        run: |
+          mkdir -p release-artifacts
+          cp android/app/build/outputs/apk/release/*.apk release-artifacts/EventMate-VIP-Universal.apk
+          cp android/app/build/outputs/apk/release/*.apk release-artifacts/EventMate-VIP-Myket.apk
+          cp android/app/build/outputs/apk/release/*.apk release-artifacts/EventMate-VIP-CafeBazaar.apk
+          cp android/app/build/outputs/bundle/release/*.aab release-artifacts/EventMate-VIP-StoreBundle.aab
+
+      - name: 9. Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: EventMate-VIP-Signed-Packages
+          path: release-artifacts/*
+
+      - name: 10. Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.0
+          name: "EventMate VIP v1.1.0 (APK + AAB)"
+          files: release-artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# === END OF FILE ===

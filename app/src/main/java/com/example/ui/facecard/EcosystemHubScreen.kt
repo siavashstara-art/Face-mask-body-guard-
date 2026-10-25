@@ -41,7 +41,8 @@ fun EcosystemHubScreen(
     sakhtemanPass: SakhtemanYarAccessPass,
     marketingStats: MarketingAcademyLeadStats,
     onSimulateDoorUnlock: () -> Unit = {},
-    onNavigateToStudio: () -> Unit = {}
+    onNavigateToStudio: () -> Unit = {},
+    onNavigateToScreen: (String) -> Unit = {}
 ) {
     val systemStatus by ecosystemController.systemStatus.collectAsStateWithLifecycle()
     val modules by ecosystemController.modules.collectAsStateWithLifecycle()
@@ -52,8 +53,8 @@ fun EcosystemHubScreen(
 
     var isDoorUnlocked by remember { mutableStateOf(false) }
 
-    // Sub-tab within Ecosystem: B2B Master Modules vs Portals
-    var activeSubTab by remember { mutableStateOf("master_modules") } // "master_modules", "portals"
+    // Sub-tab within Ecosystem: Default to Super App Portals
+    var activeSubTab by remember { mutableStateOf("super_app_portals") } // "super_app_portals", "master_modules", "maison_network", "portals"
 
     // Mini Try-On UI State
     var selectedGender by remember { mutableStateOf("girl") } // "girl", "boy"
@@ -244,6 +245,16 @@ fun EcosystemHubScreen(
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
                         Text("• سیستم مشتری برگردان با یادآوری خودکار ریشه‌گیری مو، کاشت ناخن، پاکسازی پوست و بن سالگرد ازدواج\n• شخصی‌سازی فی‌البداهه بنر سالن برای ویزیتور و بازاریاب در محل\n• مشاوره تصویری مو و شینیون برای مشتریان دودل و مردد با آنالیز فرم چهره", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("salonyar") },
+                            colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.ContentCut, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به استودیوی سالن‌یار", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -267,6 +278,16 @@ fun EcosystemHubScreen(
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
                         Text("• ثبت ژورنال B2B لباس‌های عروس و کت‌وشلوار جهت اجاره و فروش\n• مزون خانگی با استتار چهره (گل رز/بلر) و تغییر نسبت‌های اندام (چاق/لاغر) جهت حفظ حریم خصوصی مدل خانگی\n• شبکه ارجاع دوطرفه عروس‌ها بین سالن و مزون با پورسانت مشترک", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("maisonyar") },
+                            colors = ButtonDefaults.buttonColors(containerColor = SageGreen),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Checkroom, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به استودیوی مزون‌یار", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -285,6 +306,16 @@ fun EcosystemHubScreen(
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
                         Text("• پرو و فتوشاپ دونفره عروس و داماد در صحنه سوار شدن به ماشین عروس، سن گرد تالار و ورود باشکوه\n• تقویم رزرو هوشمند سانس‌های تالار و کاتالوگ تشریفات غذا و پذیرایی", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("talaryar") },
+                            colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Celebration, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به استودیوی تالاریار و تاریخ‌های طلایی", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -302,7 +333,17 @@ fun EcosystemHubScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
-                        Text("• طراحی ۳ بعدی و پرو تعاملی جایگاه عروس و داماد، جایگاه سفره عقد، آرک‌های گل طبیعی و نورپردازی تالار\n• کاتالوگ دیزاینرهای تشریفات و تزئین ماشین عروس", fontSize = 11.sp, color = CharcoalSecondary)
+                        Text("• طراحی ۳ بعدی و پرو تعاملی جایگاه عروس و داماد، جایگاه سفره عقد، آرک‌های گل طبیعی و نورپردازی تالار\n• کاتالوگ دیزاینرهای تشریفات، کلوزت‌روم، کابینت انزو و محاسبه‌گر متراژ", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("decormate") },
+                            colors = ButtonDefaults.buttonColors(containerColor = SageGreen),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Weekend, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به استودیوی دکورمیت VIP", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -320,7 +361,17 @@ fun EcosystemHubScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
-                        Text("• پرونده دیجیتال زیباجویان، یادآور جلسات شارژ لیزر و پاکسازی ویزیتورها\n• شبیه‌ساز تزریق ژل، بوتاکس و هیدراتاسیون تخصصی پوست قبل از درمان", fontSize = 11.sp, color = CharcoalSecondary)
+                        Text("• پرونده دیجیتال زیباجویان، یادآور جلسات شارژ لیزر و پاکسازی پوست\n• شبیه‌ساز تزریق ژل، بوتاکس و هیدراتاسیون تخصصی پوست قبل از درمان", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToStudio() },
+                            colors = ButtonDefaults.buttonColors(containerColor = TerracottaAccent),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Face, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("تست پرو و شبیه‌ساز پوست و زیبایی", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -339,6 +390,70 @@ fun EcosystemHubScreen(
                             modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
                         )
                         Text("• شبیه‌ساز اصلاح طرح لبخند روی عکس واقعی زیباجو قبل از تراش دندان\n• پیش‌نمایش رنگ‌های کامپوزیت و لمینت (سفید هالیوودی، طبیعی، بلیچ) جهت مشاوره دندانپزشک با بیمار", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToStudio() },
+                            colors = ButtonDefaults.buttonColors(containerColor = SageGreen),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("تست شبیه‌ساز اصلاح طرح لبخند", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // 7. TALAYAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("۷. سامانه طلایار (سرویس طلای عروس و آینه شمعدان نقره)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                            Surface(color = Color(0xFFD4AF37), shape = RoundedCornerShape(4.dp)) {
+                                Text("طلای عروس", color = Color.White, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Text("• فرمول زنده و قانونی اتحادیه طلا و جواهر (محاسبه ۹٪ مالیات تنها روی سود و اجرت ساخت)\n• محاسبه‌گر تعویض طلای دست‌دوم با سرویس نو عروس و کسر فاکتوری\n• ژورنال آینه و شمعدان نقره عیار ۸۴۰ و شمش‌های طلای سرمایه‌گذاری با کد QR", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("talayar") },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB8860B)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Diamond, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به استودیوی طلایار و محاسبه‌گر قیمت", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // 8. FARSHBAZAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("۸. سامانه فرش‌بازار (فرش و قالی جهیزیه عروس و داماد)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                            Surface(color = Color(0xFF8B0000), shape = RoundedCornerShape(4.dp)) {
+                                Text("جهیزیه خانه نو", color = Color.White, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Text("• قالی‌های اصیل دستباف تبریز، اصفهان، کاشان و قشقایی با سرتیفیکیت رج‌شمار\n• شبیه‌ساز پرو تعاملی فرش روی کفپوش سالن پذیرایی خانه نو (پارکت، سرامیک، مرمر)\n• طرح تسهیلات اقساطی جهیزیه ۲۴ ماهه برای زوج‌های معرفی‌شده از تالارها و سالن‌ها", fontSize = 11.sp, color = CharcoalSecondary)
+                        Button(
+                            onClick = { onNavigateToScreen("farshbazar") },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B0000)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Layers, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("ورود به گالری و شبیه‌ساز فرش‌بازار", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

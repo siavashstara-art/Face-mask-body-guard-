@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="walnut" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A2E1B" />
+      <stop offset="50%" stop-color="#352012" />
+      <stop offset="100%" stop-color="#1F1209" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6E27A" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#AA820A" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#walnut)" />
+  <rect x="28" y="28" width="456" height="456" rx="90" fill="none" stroke="url(#gold)" stroke-width="6" opacity="0.85" />
+  <!-- Luxury Architectural Cabinet & Crown Emblem -->
+  <path d="M128 170 L256 105 L384 170 L384 370 L128 370 Z" fill="none" stroke="url(#gold)" stroke-width="14" stroke-linejoin="round" />
+  <line x1="256" y1="105" x2="256" y2="370" stroke="url(#gold)" stroke-width="10" />
+  <line x1="128" y1="255" x2="384" y2="255" stroke="url(#gold)" stroke-width="10" />
+  <circle cx="232" cy="210" r="8" fill="url(#gold)" />
+  <circle cx="280" cy="210" r="8" fill="url(#gold)" />
+  <text x="256" y="432" font-family="serif" font-size="42" font-weight="bold" fill="url(#gold)" text-anchor="middle" letter-spacing="4">DECORMATE</text>
+</svg>

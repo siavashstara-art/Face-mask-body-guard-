@@ -139,7 +139,8 @@ fun FaceCardMainHostScreen(
                         sakhtemanPass = sakhtemanPass,
                         marketingStats = marketingStats,
                         onSimulateDoorUnlock = { /* Simulated unlock */ },
-                        onNavigateToStudio = onNavigateToStudio
+                        onNavigateToStudio = onNavigateToStudio,
+                        onNavigateToScreen = { screen -> viewModel.navigateTo(screen) }
                     )
                     else -> FaceCardDashboardScreen(
                         cards = cards,

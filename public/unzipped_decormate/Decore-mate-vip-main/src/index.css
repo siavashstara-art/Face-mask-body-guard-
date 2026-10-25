@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-ivory: #FAF7F2;
+    --card-white: #FFFFFF;
+    --border-gold: #E6DEC8;
+    --walnut-deep: #4A2E1B;
+    --walnut-warm: #6F4E37;
+    --gold-royal: #D4AF37;
+    --emerald-confirm: #059669;
+  }
+
+  html {
+    font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+    background-color: #FAF7F2;
+    color: #2A1A10;
+  }
+
+  /* Font scaling for Accessibility (Motor & Low-Vision) */
+  html.font-scale-normal {
+    font-size: 16px;
+  }
+  html.font-scale-large {
+    font-size: 18.5px;
+  }
+  html.font-scale-xlarge {
+    font-size: 21px;
+  }
+
+  /* Large touch targets mode */
+  html.large-touch-targets button,
+  html.large-touch-targets a,
+  html.large-touch-targets select,
+  html.large-touch-targets input {
+    min-height: 48px;
+  }
+
+  /* High Contrast Mode for Visually Impaired Users */
+  html.high-contrast-mode {
+    filter: contrast(1.18);
+  }
+  html.high-contrast-mode body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  html.high-contrast-mode .hc-card {
+    border-width: 2px !important;
+    border-color: #4A2E1B !important;
+    box-shadow: none !important;
+  }
+
+  /* ADHD Calm Focus Mode: Removes distracting animations and visual noise */
+  html.adhd-focus-mode *,
+  html.adhd-focus-mode *::before,
+  html.adhd-focus-mode *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.font-display-luxury {
+  font-family: 'Cormorant Garamond', 'Vazirmatn', Georgia, serif;
+}
+
+.font-mono-tabular {
+  font-family: 'JetBrains Mono', 'Vazirmatn', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

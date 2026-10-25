@@ -1,0 +1,112 @@
+name: Build & Sign Release Android (APK + AAB)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-sign-android:
+    name: Build Signed Release APK & AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js 20 & Build Web Bundle (Offline Assets)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 3. Install Dependencies & Build Web App
+        run: |
+          npm install
+          npm run build
+          mkdir -p android/app/src/main/assets/public
+          cp -r dist/* android/app/src/main/assets/public/ || true
+
+      - name: 4. Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 5. Setup Gradle 8.5
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
+
+      - name: 6. Prepare or Auto-Generate Release Keystore (Zero-Touch Signing)
+        working-directory: ./android/app
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'decormate123' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'decormate_key' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'decormate123' }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Decoding Keystore from GitHub Secret KEYSTORE_BASE64..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+          elif [ ! -f keystore.jks ]; then
+            echo "Auto-generating Production RSA-2048 Release Keystore (keystore.jks)..."
+            keytool -genkeypair -v \
+              -keystore keystore.jks \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -alias "$KEY_ALIAS" \
+              -storepass "$KEYSTORE_PASSWORD" \
+              -keypass "$KEY_PASSWORD" \
+              -dname "CN=DecorMate VIP, OU=FBNM Ecosystem, O=NeoMetaverCity, L=Tehran, S=Tehran, C=IR"
+          fi
+
+      - name: 7. Build Signed Release APK & AAB Bundle
+        working-directory: ./android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'decormate123' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'decormate_key' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'decormate123' }}
+        run: |
+          gradle assembleRelease bundleRelease --no-daemon --stacktrace
+
+      - name: 8. Collect & Rename Signed APK and AAB Outputs
+        run: |
+          mkdir -p release-outputs
+          cp android/app/build/outputs/apk/release/app-release.apk release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.aab
+          cp android/app/keystore.jks release-outputs/decormate-release-keystore.jks
+
+      - name: 9. Upload Signed APK & AAB Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DecorMate-VIP-Signed-APK-and-AAB
+          retention-days: 90
+          path: |
+            release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.apk
+            release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.aab
+            release-outputs/decormate-release-keystore.jks
+
+      - name: 10. Create Automatic GitHub Release with APK & AAB
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "DecorMate VIP v1.0.${{ github.run_number }} — Signed Release (APK + AAB)"
+          body: |
+            ### 👑 DecorMate VIP | دکورمِیت — خروجی رسمی امضاشده اندروید (APK + AAB)
+            **اکوسیستم آفرینش | شهر جدید نیومتاورسیتی جهان | توان استیج FBNM**
+            
+            - 📦 **`DecorMate-VIP-v1.0.0-Release-Signed.apk`**: فایل نصبی مستقیم اندروید با امضای V1/V2/V3/V4 (آماده نصب مستقیم و انتشار در **کافه‌بازار** و **مایکت**).
+            - 📦 **`DecorMate-VIP-v1.0.0-Release-Signed.aab`**: باندل رسمی امضاشده (Android App Bundle) آماده بارگذاری در **گوگل‌پلی (Google Play Console)**.
+            - 🔑 **`decormate-release-keystore.jks`**: فایل کلید امضای دیجیتال ریلیز جهت نگه‌داری برای آپدیت‌های بعدی.
+          files: |
+            release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.apk
+            release-outputs/DecorMate-VIP-v1.0.0-Release-Signed.aab
+            release-outputs/decormate-release-keystore.jks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

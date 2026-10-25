@@ -121,6 +121,26 @@ class MainActivity : ComponentActivity() {
                                         onNavigateBack = { viewModel.navigateTo("facecard") },
                                         onNavigateToStudio = { viewModel.navigateTo("camera") }
                                     )
+                                    "talaryar" -> com.example.ui.talaryar.TalarYarScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
+                                    "decormate" -> com.example.ui.decormate.DecorMateScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
+                                    "talayar" -> com.example.ui.talayar.TalaYarScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
+                                    "farshbazar" -> com.example.ui.farshbazar.FarshBazarScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
                                     else -> FaceCardMainHostScreen(
                                         viewModel = viewModel,
                                         onNavigateToStudio = { viewModel.navigateTo("camera") },
