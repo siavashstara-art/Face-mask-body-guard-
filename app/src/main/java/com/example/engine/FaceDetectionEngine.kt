@@ -25,86 +25,128 @@ class FaceDetectionEngine {
         sourceBitmap: Bitmap,
         isFrontCamera: Boolean = true
     ): List<TrackedFace> = withContext(Dispatchers.Default) {
-        try {
-            // Downscale to 320px width to keep memory consumption low on Redmi Note 8
+        detectFacesOnBitmapSync(sourceBitmap, isFrontCamera)
+    }
+
+    /**
+     * Synchronous face detection method to be called directly on background camera thread.
+     * Prevents async race conditions and recycles temporary buffers immediately to prevent OOM crashes.
+     */
+    fun detectFacesOnBitmapSync(
+        sourceBitmap: Bitmap,
+        isFrontCamera: Boolean = true
+    ): List<TrackedFace> {
+        return try {
+            if (sourceBitmap.isRecycled) return lastFaces
+
+            // Downscale to 320px width to keep memory consumption low on budget devices like Redmi Note 8
             val targetWidth = 320
+            if (sourceBitmap.width <= 0 || sourceBitmap.height <= 0) return lastFaces
+
             val scale = targetWidth.toFloat() / sourceBitmap.width
             val targetHeight = (sourceBitmap.height * scale).toInt()
 
-            // FaceDetector requires even width and Bitmap.Config.RGB_565
+            // FaceDetector requires even width and height
             val evenWidth = if (targetWidth % 2 == 0) targetWidth else targetWidth - 1
             val evenHeight = if (targetHeight % 2 == 0) targetHeight else targetHeight - 1
 
-            val scaledBitmap = Bitmap.createScaledBitmap(sourceBitmap, evenWidth, evenHeight, false)
-            val rgb565Bitmap = if (scaledBitmap.config == Bitmap.Config.RGB_565) {
-                scaledBitmap
-            } else {
-                scaledBitmap.copy(Bitmap.Config.RGB_565, false)
-            }
+            if (evenWidth <= 0 || evenHeight <= 0) return lastFaces
 
-            val faceDetector = FaceDetector(evenWidth, evenHeight, maxFaces)
-            val facesArray = arrayOfNulls<FaceDetector.Face>(maxFaces)
-            val numFaces = faceDetector.findFaces(rgb565Bitmap, facesArray)
+            val scaledBitmap = try {
+                Bitmap.createScaledBitmap(sourceBitmap, evenWidth, evenHeight, false)
+            } catch (_: Throwable) {
+                null
+            } ?: return lastFaces
+
+            val rgb565Bitmap = try {
+                if (scaledBitmap.config == Bitmap.Config.RGB_565) {
+                    scaledBitmap
+                } else {
+                    val copy = scaledBitmap.copy(Bitmap.Config.RGB_565, false)
+                    if (scaledBitmap != copy) {
+                        try { scaledBitmap.recycle() } catch (_: Throwable) {}
+                    }
+                    copy
+                }
+            } catch (_: Throwable) {
+                try { scaledBitmap.recycle() } catch (_: Throwable) {}
+                null
+            } ?: return lastFaces
 
             val detectedList = mutableListOf<TrackedFace>()
 
-            for (i in 0 until numFaces) {
-                val face = facesArray[i] ?: continue
-                val midPoint = PointF()
-                face.getMidPoint(midPoint)
-                val eyeDistance = face.eyesDistance()
-                val confidence = face.confidence()
+            try {
+                if (!rgb565Bitmap.isRecycled) {
+                    val faceDetector = FaceDetector(evenWidth, evenHeight, maxFaces)
+                    val facesArray = arrayOfNulls<FaceDetector.Face>(maxFaces)
+                    val numFaces = faceDetector.findFaces(rgb565Bitmap, facesArray)
 
-                // Calculate bounding box relative to scaled image
-                val faceWidth = eyeDistance * 2.2f
-                val faceHeight = eyeDistance * 3.0f
+                    for (i in 0 until numFaces) {
+                        val face = facesArray[i] ?: continue
+                        val midPoint = PointF()
+                        face.getMidPoint(midPoint)
+                        val eyeDistance = face.eyesDistance()
+                        val confidence = face.confidence()
 
-                var left = (midPoint.x - faceWidth / 2f) / evenWidth
-                var top = (midPoint.y - faceHeight * 0.45f) / evenHeight
-                var right = (midPoint.x + faceWidth / 2f) / evenWidth
-                var bottom = (midPoint.y + faceHeight * 0.55f) / evenHeight
+                        // Calculate bounding box relative to scaled image
+                        val faceWidth = eyeDistance * 2.2f
+                        val faceHeight = eyeDistance * 3.0f
 
-                // Clamp to [0, 1]
-                left = left.coerceIn(0f, 1f)
-                top = top.coerceIn(0f, 1f)
-                right = right.coerceIn(0f, 1f)
-                bottom = bottom.coerceIn(0f, 1f)
+                        var left = (midPoint.x - faceWidth / 2f) / evenWidth
+                        var top = (midPoint.y - faceHeight * 0.45f) / evenHeight
+                        var right = (midPoint.x + faceWidth / 2f) / evenWidth
+                        var bottom = (midPoint.y + faceHeight * 0.55f) / evenHeight
 
-                // If front camera, handle horizontal mirroring if needed
-                val finalLeft = if (isFrontCamera) 1f - right else left
-                val finalRight = if (isFrontCamera) 1f - left else right
+                        // Clamp to [0, 1]
+                        left = left.coerceIn(0f, 1f)
+                        top = top.coerceIn(0f, 1f)
+                        right = right.coerceIn(0f, 1f)
+                        bottom = bottom.coerceIn(0f, 1f)
 
-                val rawBounds = RectF(finalLeft, top, finalRight, bottom)
+                        // If front camera, handle horizontal mirroring
+                        val finalLeft = if (isFrontCamera) 1f - right else left
+                        val finalRight = if (isFrontCamera) 1f - left else right
 
-                // Smooth with exponential moving average to eliminate jitter
-                val prev = smoothedBoundsMap[i] ?: rawBounds
-                val alpha = 0.35f
-                val smoothLeft = prev.left + alpha * (rawBounds.left - prev.left)
-                val smoothTop = prev.top + alpha * (rawBounds.top - prev.top)
-                val smoothRight = prev.right + alpha * (rawBounds.right - prev.right)
-                val smoothBottom = prev.bottom + alpha * (rawBounds.bottom - prev.bottom)
+                        val rawBounds = RectF(finalLeft, top, finalRight, bottom)
 
-                val smoothed = RectF(smoothLeft, smoothTop, smoothRight, smoothBottom)
-                smoothedBoundsMap[i] = smoothed
+                        // Smooth with exponential moving average to eliminate jitter
+                        val prev = smoothedBoundsMap[i] ?: rawBounds
+                        val alpha = 0.35f
+                        val smoothLeft = prev.left + alpha * (rawBounds.left - prev.left)
+                        val smoothTop = prev.top + alpha * (rawBounds.top - prev.top)
+                        val smoothRight = prev.right + alpha * (rawBounds.right - prev.right)
+                        val smoothBottom = prev.bottom + alpha * (rawBounds.bottom - prev.bottom)
 
-                detectedList.add(
-                    TrackedFace(
-                        id = i,
-                        bounds = rawBounds,
-                        confidence = confidence,
-                        eyeCenterY = 0.32f,
-                        mouthCenterY = 0.72f,
-                        smoothedBounds = smoothed
-                    )
-                )
+                        val smoothed = RectF(smoothLeft, smoothTop, smoothRight, smoothBottom)
+                        smoothedBoundsMap[i] = smoothed
+
+                        detectedList.add(
+                            TrackedFace(
+                                id = i,
+                                bounds = rawBounds,
+                                confidence = confidence,
+                                eyeCenterY = 0.32f,
+                                mouthCenterY = 0.72f,
+                                smoothedBounds = smoothed
+                            )
+                        )
+                    }
+                }
+            } catch (_: Throwable) {
+            } finally {
+                try {
+                    if (!rgb565Bitmap.isRecycled) {
+                        rgb565Bitmap.recycle()
+                    }
+                } catch (_: Throwable) {}
             }
 
             if (detectedList.isNotEmpty()) {
                 lastFaces = detectedList
             }
             detectedList
-        } catch (e: Exception) {
-            // Graceful fallback to cached faces
+        } catch (_: Throwable) {
+            // Graceful fallback to cached faces without crashing
             lastFaces
         }
     }

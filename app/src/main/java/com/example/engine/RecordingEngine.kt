@@ -134,30 +134,42 @@ class RecordingEngine(
     }
 
     private fun handleRecordEvent(event: VideoRecordEvent, file: File, onEvent: (VideoRecordEvent) -> Unit) {
-        when (event) {
-            is VideoRecordEvent.Start -> {
-                isRecording = true
-                isPaused = false
+        try {
+            when (event) {
+                is VideoRecordEvent.Start -> {
+                    isRecording = true
+                    isPaused = false
+                }
+                is VideoRecordEvent.Pause -> {
+                    isPaused = true
+                }
+                is VideoRecordEvent.Resume -> {
+                    isPaused = false
+                }
+                is VideoRecordEvent.Status -> {
+                    try {
+                        recordingDurationSeconds = event.recordingStats.recordedDurationNanos / 1_000_000_000L
+                    } catch (_: Throwable) {}
+                }
+                is VideoRecordEvent.Finalize -> {
+                    isRecording = false
+                    isPaused = false
+                    recordingDurationSeconds = 0L
+                    activeRecording = null
+                    // Ensure output video file is finalized and valid for playback
+                    try {
+                        storageManager.ensureValidVideoFile(file)
+                    } catch (_: Throwable) {}
+                }
             }
-            is VideoRecordEvent.Pause -> {
-                isPaused = true
-            }
-            is VideoRecordEvent.Resume -> {
-                isPaused = false
-            }
-            is VideoRecordEvent.Status -> {
-                recordingDurationSeconds = event.recordingStats.recordedDurationNanos / 1_000_000_000L
-            }
-            is VideoRecordEvent.Finalize -> {
-                isRecording = false
-                isPaused = false
-                recordingDurationSeconds = 0L
-                activeRecording = null
-                // Ensure output video file is finalized and valid for playback
-                storageManager.ensureValidVideoFile(file)
-            }
+            try {
+                onEvent(event)
+            } catch (_: Throwable) {}
+        } catch (_: Throwable) {
+            isRecording = false
+            isPaused = false
+            activeRecording = null
         }
-        onEvent(event)
     }
 
     fun pauseRecording() {

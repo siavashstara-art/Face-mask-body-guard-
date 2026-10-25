@@ -94,30 +94,44 @@ fun CameraPreviewView(
                                     null
                                 }
 
-                                if (bitmap != null) {
-                                    val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                                if (bitmap != null && !bitmap.isRecycled) {
+                                    val rotationDegrees = try { imageProxy.imageInfo.rotationDegrees } catch (_: Throwable) { 0 }
                                     val rotatedBitmap = if (rotationDegrees != 0) {
-                                        val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
-                                        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                                        try { bitmap.recycle() } catch (_: Throwable) {}
-                                        rotated
+                                        try {
+                                            val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+                                            val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                                            if (rotated != bitmap) {
+                                                try { bitmap.recycle() } catch (_: Throwable) {}
+                                            }
+                                            rotated
+                                        } catch (_: Throwable) {
+                                            bitmap
+                                        }
                                     } else {
                                         bitmap
                                     }
 
-                                    CoroutineScope(Dispatchers.Default).launch {
-                                        try {
+                                    try {
+                                        if (rotatedBitmap != null && !rotatedBitmap.isRecycled) {
                                             val isFront = effectiveSelector == CameraSelector.DEFAULT_FRONT_CAMERA
-                                            val detected = faceDetectionEngine.detectFacesOnBitmap(
+                                            // Process face detection synchronously directly on cameraExecutor thread
+                                            val detected = faceDetectionEngine.detectFacesOnBitmapSync(
                                                 sourceBitmap = rotatedBitmap,
                                                 isFrontCamera = isFront
                                             )
-                                            onFacesUpdated(detected)
-                                        } catch (_: Throwable) {
-                                        } finally {
-                                            try { rotatedBitmap.recycle() } catch (_: Throwable) {}
-                                            isAnalyzing.set(false)
+                                            // Dispatch result to main UI thread
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                onFacesUpdated(detected)
+                                            }
                                         }
+                                    } catch (_: Throwable) {
+                                    } finally {
+                                        try {
+                                            if (rotatedBitmap != null && !rotatedBitmap.isRecycled) {
+                                                rotatedBitmap.recycle()
+                                            }
+                                        } catch (_: Throwable) {}
+                                        isAnalyzing.set(false)
                                     }
                                 } else {
                                     isAnalyzing.set(false)

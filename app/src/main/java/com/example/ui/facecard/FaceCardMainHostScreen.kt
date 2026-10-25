@@ -52,7 +52,22 @@ fun FaceCardMainHostScreen(
                     )
                 )
 
-                // Tab 2: Loyalty (باشگاه مشتریان و تمبر دیجیتال)
+                // Tab 2: SalonYar (سالن‌یار - سیستم مشتری برگردان و دمو)
+                NavigationBarItem(
+                    selected = activeTab == "salonyar",
+                    onClick = { viewModel.selectFaceCardTab("salonyar") },
+                    icon = { Icon(Icons.Default.ContentCut, contentDescription = "SalonYar") },
+                    label = { Text("سالن‌یار", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = TerracottaAccent,
+                        selectedTextColor = TerracottaAccent,
+                        indicatorColor = TerracottaSubtle,
+                        unselectedIconColor = CharcoalSecondary,
+                        unselectedTextColor = CharcoalSecondary
+                    )
+                )
+
+                // Tab 3: Loyalty (باشگاه مشتریان و تمبر دیجیتال)
                 NavigationBarItem(
                     selected = activeTab == "loyalty",
                     onClick = { viewModel.selectFaceCardTab("loyalty") },
@@ -67,7 +82,7 @@ fun FaceCardMainHostScreen(
                     )
                 )
 
-                // Tab 3: Ecosystem (اکوسیستم سالن‌یار، ساختمان‌یار و آکادمی)
+                // Tab 4: Ecosystem (اکوسیستم سالن‌یار، ساختمان‌یار و آکادمی)
                 NavigationBarItem(
                     selected = activeTab == "ecosystem",
                     onClick = { viewModel.selectFaceCardTab("ecosystem") },
@@ -82,7 +97,7 @@ fun FaceCardMainHostScreen(
                     )
                 )
 
-                // Tab 4: Studio Camera & Privacy (استودیو ویدیو و معرفی پرتره)
+                // Tab 5: Studio Camera & Privacy (استودیو ویدیو و معرفی پرتره)
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToStudio,
@@ -108,6 +123,11 @@ fun FaceCardMainHostScreen(
                 label = "FaceCardTabTransition"
             ) { tab ->
                 when (tab) {
+                    "salonyar" -> com.example.ui.salonyar.SalonYarScreen(
+                        isPersian = true,
+                        onNavigateBack = { viewModel.selectFaceCardTab("cards") },
+                        onNavigateToStudio = onNavigateToStudio
+                    )
                     "loyalty" -> CustomerLoyaltyScreen(
                         cards = loyaltyStampCards,
                         onPunchStamp = { cardId -> viewModel.faceCardRepo.punchStamp(cardId) }

@@ -111,6 +111,16 @@ class MainActivity : ComponentActivity() {
                                         adminRepo = viewModel.adminRepo,
                                         onNavigateBack = { viewModel.navigateTo("facecard") }
                                     )
+                                    "salonyar" -> com.example.ui.salonyar.SalonYarScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
+                                    "maisonyar" -> com.example.ui.maisonyar.MaisonYarScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") },
+                                        onNavigateToStudio = { viewModel.navigateTo("camera") }
+                                    )
                                     else -> FaceCardMainHostScreen(
                                         viewModel = viewModel,
                                         onNavigateToStudio = { viewModel.navigateTo("camera") },

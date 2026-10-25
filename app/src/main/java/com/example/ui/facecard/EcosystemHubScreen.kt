@@ -25,6 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.R
 import com.example.engine.EcosystemMasterController
 import com.example.model.*
 import com.example.ui.theme.*
@@ -119,8 +123,25 @@ fun EcosystemHubScreen(
                 .fillMaxWidth()
                 .background(WarmSurfaceSecondary, RoundedCornerShape(12.dp))
                 .padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { activeSubTab = "super_app_portals" },
+                color = if (activeSubTab == "super_app_portals") TerracottaAccent else Color.Transparent,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(
+                    text = "سوپراپلیکیشن اصناف",
+                    color = if (activeSubTab == "super_app_portals") Color.White else CharcoalPrimary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
             Surface(
                 modifier = Modifier
                     .weight(1f)
@@ -131,7 +152,7 @@ fun EcosystemHubScreen(
                 Text(
                     text = "ماژول‌های B2B",
                     color = if (activeSubTab == "master_modules") Color.White else CharcoalPrimary,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 8.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -140,15 +161,15 @@ fun EcosystemHubScreen(
 
             Surface(
                 modifier = Modifier
-                    .weight(1.2f)
+                    .weight(1.1f)
                     .clickable { activeSubTab = "maison_network" },
                 color = if (activeSubTab == "maison_network") TerracottaAccent else Color.Transparent,
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    text = "شبکه مزون‌ها و پرو عروس",
+                    text = "شبکه مزون‌ها",
                     color = if (activeSubTab == "maison_network") Color.White else CharcoalPrimary,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 8.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -163,9 +184,9 @@ fun EcosystemHubScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    text = "سامانه‌های سالن و املاک",
+                    text = "سامانه‌های سالن/املاک",
                     color = if (activeSubTab == "portals") Color.White else CharcoalPrimary,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 8.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -173,7 +194,155 @@ fun EcosystemHubScreen(
             }
         }
 
-        if (activeSubTab == "master_modules") {
+        if (activeSubTab == "super_app_portals") {
+            // Super App Specialty Trade Portals Section
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(
+                    color = TerracottaSubtle,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, TerracottaAccent.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Store, contentDescription = null, tint = TerracottaAccent, modifier = Modifier.size(32.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "سوپراپلیکیشن تخصصی اصناف زیبایی و تشریفات",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = CharcoalPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "درگاه‌های اختصاصی سالن‌های زیبایی، مزون‌ها، تالارها، دکوراسیون، کلینیک‌ها و دندانپزشکان زیبایی با ارجاع متقابل و درآمد مشترک.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = CharcoalSecondary
+                            )
+                        }
+                    }
+                }
+
+                // 1. SALONYAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("۱. سامانه سالن‌یار (سالن‌های زیبایی و آرایشگاه‌ها)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                            Surface(color = TerracottaAccent, shape = RoundedCornerShape(4.dp)) {
+                                Text("فعال در منو", color = Color.White, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            }
+                        }
+                        Image(
+                            painter = painterResource(R.drawable.salonyar_banner_1792911967921),
+                            contentDescription = "SalonYar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• سیستم مشتری برگردان با یادآوری خودکار ریشه‌گیری مو، کاشت ناخن، پاکسازی پوست و بن سالگرد ازدواج\n• شخصی‌سازی فی‌البداهه بنر سالن برای ویزیتور و بازاریاب در محل\n• مشاوره تصویری مو و شینیون برای مشتریان دودل و مردد با آنالیز فرم چهره", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+
+                // 2. MAISONYAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("۲. سامانه مزون‌یار (لباس عروس، نامزدی و کت‌وشلوار)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                            Surface(color = SageGreen, shape = RoundedCornerShape(4.dp)) {
+                                Text("فعال در منو", color = Color.White, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            }
+                        }
+                        Image(
+                            painter = painterResource(R.drawable.maisonyar_catalog_1792912622872),
+                            contentDescription = "MaisonYar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• ثبت ژورنال B2B لباس‌های عروس و کت‌وشلوار جهت اجاره و فروش\n• مزون خانگی با استتار چهره (گل رز/بلر) و تغییر نسبت‌های اندام (چاق/لاغر) جهت حفظ حریم خصوصی مدل خانگی\n• شبکه ارجاع دوطرفه عروس‌ها بین سالن و مزون با پورسانت مشترک", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+
+                // 3. TALARYAR & VENUE PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("۳. سامانه تالاریار و تشریفات (تالارها، باغ‌ها و خودرو عروس)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                        Image(
+                            painter = painterResource(R.drawable.salonyar_car_dance_1792912000489),
+                            contentDescription = "TalarYar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• پرو و فتوشاپ دونفره عروس و داماد در صحنه سوار شدن به ماشین عروس، سن گرد تالار و ورود باشکوه\n• تقویم رزرو هوشمند سانس‌های تالار و کاتالوگ تشریفات غذا و پذیرایی", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+
+                // 4. DECORMATE PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("۴. سامانه دکورمیت (DecorMate - دکوراسیون، گل‌آرایی و سفره عقد)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                        Image(
+                            painter = painterResource(R.drawable.decormate_wedding_stage_1792912657518),
+                            contentDescription = "DecorMate",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• طراحی ۳ بعدی و پرو تعاملی جایگاه عروس و داماد، جایگاه سفره عقد، آرک‌های گل طبیعی و نورپردازی تالار\n• کاتالوگ دیزاینرهای تشریفات و تزئین ماشین عروس", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+
+                // 5. CLINICYAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("۵. سامانه کلینیک‌یار (کلینیک‌های زیبایی، لیزر، پوست و جوانسازی)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                        Image(
+                            painter = painterResource(R.drawable.clinic_yar_skincare_1792912645797),
+                            contentDescription = "ClinicYar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• پرونده دیجیتال زیباجویان، یادآور جلسات شارژ لیزر و پاکسازی ویزیتورها\n• شبیه‌ساز تزریق ژل، بوتاکس و هیدراتاسیون تخصصی پوست قبل از درمان", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+
+                // 6. DENTAL BEAUTY YAR PORTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarmSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, WarmBorder)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("۶. سامانه دندانپزشکان زیبایی (DentalBeauty Yar - اصلاح طرح لبخند)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = CharcoalPrimary)
+                        Image(
+                            painter = painterResource(R.drawable.dental_beauty_smile_1792912633400),
+                            contentDescription = "DentalBeauty",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(10.dp))
+                        )
+                        Text("• شبیه‌ساز اصلاح طرح لبخند روی عکس واقعی زیباجو قبل از تراش دندان\n• پیش‌نمایش رنگ‌های کامپوزیت و لمینت (سفید هالیوودی، طبیعی، بلیچ) جهت مشاوره دندانپزشک با بیمار", fontSize = 11.sp, color = CharcoalSecondary)
+                    }
+                }
+            }
+        } else if (activeSubTab == "master_modules") {
             // ============================================
             // 0. SYSTEM HEALTH & VALIDATION BANNER
             // ============================================
