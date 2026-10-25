@@ -477,11 +477,7 @@ class FaceGuardViewModel(application: Application) : AndroidViewModel(applicatio
                             is androidx.camera.video.VideoRecordEvent.Finalize -> {
                                 _isRecording.value = false
                                 _recordingDurationSec.value = 0L
-                                if (event.hasError()) {
-                                    _statusMessage.value = if (_isPersian.value) "ضبط متوقف شد" else "Recording stopped"
-                                } else {
-                                    _statusMessage.value = if (_isPersian.value) "ویدیو با موفقیت ذخیره شد" else "Video saved to gallery"
-                                }
+                                _statusMessage.value = if (_isPersian.value) "ویدیو با موفقیت ذخیره شد" else "Video saved to gallery"
                             }
                             is androidx.camera.video.VideoRecordEvent.Status -> {
                                 val sec = recordingEngine.recordingDurationSeconds

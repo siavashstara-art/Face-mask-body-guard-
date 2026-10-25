@@ -184,11 +184,16 @@ fun PrivacyStudioPanel(
                 val selected = privacyConfig.maskType == mask
                 val name = when (mask) {
                     PrivacyMaskType.NONE -> if (isPersian) "بدون ماسک" else "None"
-                    PrivacyMaskType.EYES_VISOR -> if (isPersian) "نوار چشم (سنسور)" else "Eyes Visor"
+                    PrivacyMaskType.TWIN_ROSES -> if (isPersian) "🌹 دو گل رز سرخ (گونه‌ها)" else "Twin Roses"
+                    PrivacyMaskType.BRIDAL_ROYAL_TIARA -> if (isPersian) "👑 تاج سلطنتی و الماس عروس" else "Royal Tiara"
+                    PrivacyMaskType.KHALIJI_GOLD_BURQA -> if (isPersian) "نقاب طلای ۲۴ عیار خلیجی" else "Gold Burqa"
+                    PrivacyMaskType.MASQUERADE_BALL -> if (isPersian) "🎭 ماسک بالماسکه ونیزی" else "Venetian Ball"
+                    PrivacyMaskType.WESTERN_LACE -> if (isPersian) "نقاب توری کلاسیک غربی" else "French Lace"
                     PrivacyMaskType.BANDARI_BURQA -> if (isPersian) "نقاب برقع بندری (سنتی)" else "Bandari Burqa"
                     PrivacyMaskType.KHALIJI_NIQAB -> if (isPersian) "نقاب نفتی خلیجی (عربی)" else "Khaliji Niqab"
-                    PrivacyMaskType.FANTASY_CROWN -> if (isPersian) "تاج فانتزی پرنسسی" else "Princess Crown"
-                    PrivacyMaskType.MASQUERADE_BALL -> if (isPersian) "ماسک بالماسکه مجلل" else "Masquerade"
+                    PrivacyMaskType.FANTASY_CROWN -> if (isPersian) "تاج پرنسسی فانتزی" else "Princess Crown"
+                    PrivacyMaskType.MODERN_GEOMETRIC -> if (isPersian) "نقاب ژئومتریک مدرن" else "Modern Visor"
+                    PrivacyMaskType.EYES_VISOR -> if (isPersian) "نوار چشم (سنسور سایبر)" else "Eyes Visor"
                     PrivacyMaskType.HEART_EYES -> if (isPersian) "نقاب قلب روی چشم‌ها" else "Heart Eyes"
                     PrivacyMaskType.CAT_MYSTERY -> if (isPersian) "نقاب گربه‌ای رازآلود" else "Cat Mystery"
                     PrivacyMaskType.FULL_SHIELD -> if (isPersian) "سپر کامل صورت" else "Full Shield"
@@ -217,10 +222,102 @@ fun PrivacyStudioPanel(
                             text = name,
                             color = if (selected) TerracottaHover else CharcoalPrimary,
                             fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                         )
                     }
                 }
+            }
+        }
+
+        // ==========================================
+        // NEW: TARGETED BODY PRIVACY & BLUR
+        // (تار کردن و پوشش بخش‌های مختلف بدن)
+        // ==========================================
+        HorizontalDivider(color = WarmBorderSubtle)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isPersian) "تار کردن و پوشش اندام‌های بدن:" else "Targeted Body Privacy & Blur:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = CharcoalPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Surface(
+                color = if (privacyConfig.bodyBlurTarget != BodyBlurTarget.NONE) SageGreenSubtle else WarmSurfaceSecondary,
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Text(
+                    text = if (privacyConfig.bodyBlurTarget != BodyBlurTarget.NONE)
+                        (if (isPersian) "فعال" else "Active")
+                    else
+                        (if (isPersian) "خاموش" else "Off"),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (privacyConfig.bodyBlurTarget != BodyBlurTarget.NONE) SageGreen else CharcoalTertiary,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(BodyBlurTarget.values()) { target ->
+                val selected = privacyConfig.bodyBlurTarget == target
+                val label = if (isPersian) target.titleFa else target.titleEn
+                FilterChip(
+                    selected = selected,
+                    onClick = { onUpdate(privacyConfig.copy(bodyBlurTarget = target)) },
+                    label = { Text(label, fontSize = 11.sp, fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = SageGreen,
+                        selectedLabelColor = Color.White,
+                        containerColor = WarmSurfaceSecondary,
+                        labelColor = CharcoalPrimary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = if (selected) SageGreen else WarmBorder,
+                        enabled = true,
+                        selected = selected
+                    ),
+                    modifier = Modifier.height(38.dp)
+                )
+            }
+        }
+
+        // Body Blur Intensity Slider
+        if (privacyConfig.bodyBlurTarget != BodyBlurTarget.NONE) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        if (isPersian) "شدت تار شدن اندام بدن:" else "Body Blur Intensity:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CharcoalSecondary
+                    )
+                    Text(
+                        "${(privacyConfig.bodyBlurIntensity * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SageGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Slider(
+                    value = privacyConfig.bodyBlurIntensity,
+                    onValueChange = { onUpdate(privacyConfig.copy(bodyBlurIntensity = it)) },
+                    valueRange = 0.3f..1.0f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = SageGreen,
+                        activeTrackColor = SageGreen,
+                        inactiveTrackColor = WarmBorder
+                    )
+                )
             }
         }
 

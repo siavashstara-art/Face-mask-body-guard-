@@ -40,6 +40,7 @@ data class MaisonGarmentItem(
     val purchasePriceToman: String,
     val celebrityFitStyle: String,
     val commissionForSalonToman: String,
+    val photoUri: String? = null,
     val isVerified: Boolean = true
 )
 
@@ -71,6 +72,43 @@ data class ReferralVoucher(
     val issueDate: String,
     val status: String = "صادر شده - آماده مراجعه"
 )
+
+enum class WeddingReceptionScene(
+    val titleFa: String,
+    val subtitleFa: String,
+    val atmosphereFa: String,
+    val visualPromptFa: String,
+    val guestMoodFa: String
+) {
+    GRAND_ENTRY_RECEPTION(
+        titleFa = "ورود باشکوه به سالن و باشگاه",
+        subtitleFa = "استقبال پرشور مهمانان، فشفشه سرد و مه سنگین",
+        atmosphereFa = "نورافکن‌های متحرک، صدای تشویق و کف زدن مهمانان، فرش قرمز ورودی",
+        visualPromptFa = "عروس و داماد دست در دست، با لبخند پیروزمندانه از میان دو ردیف مهمانان ایستاده عبور می‌کنند.",
+        guestMoodFa = "شور و هیجان مهمانان و تشویق با فشفشه‌های درخشان"
+    ),
+    FIRST_DANCE_STAGE(
+        titleFa = "استیج رقص تانگو زیر نورپردازی مهتابی",
+        subtitleFa = "شمع‌آرایی رویایی و ریزش گلبرگ‌ها",
+        atmosphereFa = "نور موضعی رمانتیک، مه سبک ابریشمی روی زمین، حلقه مهمانان دور استیج",
+        visualPromptFa = "نگاه عاشقانه دونفره، چرخش آهسته لباس پرنسسی عروس و دست داماد روی کمر عروس.",
+        guestMoodFa = "سکوت تحسین‌آمیز و نگاه‌های پر از احساس مهمانان"
+    ),
+    GARDEN_PERGOLA_VILLA(
+        titleFa = "باغ‌عمارت و لوکیشن عکاسی فضای باز",
+        subtitleFa = "آلاچیق گل‌آرایی‌شده با رزهای سفید و آب‌نما",
+        atmosphereFa = "نور ملایم ساعت طلایی (غروب)، نسیم ملایم در دنباله حریر تور عروس",
+        visualPromptFa = "قدم‌زدن دونفره روی سنگ‌فرش باغ با پس‌زمینه درختان بید مجنون و چراغ‌های رشته‌ای.",
+        guestMoodFa = "لحظات آرامش‌بخش خانوادگی و عکس‌های ژورنالی"
+    ),
+    MIRRORED_SOFREH_AGHD(
+        titleFa = "جایگاه عقد کریستالی و آینه‌کاری",
+        subtitleFa = "ظروف نقره، قند سابی روی سر با تور دانتل و شمع‌های لاله",
+        atmosphereFa = "شکوه سنتی-مدرن با آینه بخت بزرگ و بازتاب درخشان الماس‌های تاج عروس",
+        visualPromptFa = "نگاه در آینه بخت، گرفتن دست یکدیگر با حلقه ازدواج در مرکز کادر.",
+        guestMoodFa = "شادی خانواده‌ها، کل کشیدن و آرزوی خوشبختی"
+    )
+}
 
 object BundledMaisonData {
 
@@ -116,81 +154,132 @@ object BundledMaisonData {
         )
     )
 
-    val realMaisonGarments = listOf(
-        MaisonGarmentItem(
-            id = "g-bride-01",
-            maisonId = "maison-royal-niavaran",
-            maisonName = "مزون رویال کوتور (شهدخت)",
-            maisonAddress = "نیاوران، سه راه یاسر، پلاک ۲۴",
-            maisonPhone = "۰۲۱-۲۲۸۰۴۵۱۰",
-            licenseCode = "صنف-۹۸۴۲۱/الف",
-            titleFa = "لباس عروس پرنسسی سوپر رویال با دانتل فرانسه و گن‌دوزی ترک",
-            category = "لباس عروس VIP",
-            fabricAndCut = "دانتل دست‌دوز شانتون، آستر ابریشم خالص، فنردوزی ۱۵ خطی جهت باریک نشان دادن کمر",
-            rentalPriceToman = "۱۹,۵۰۰,۰۰۰ تومان",
-            purchasePriceToman = "۶۲,۰۰۰,۰۰۰ تومان",
-            celebrityFitStyle = "تن‌خور سبک پرنسس گریس کلی و آدری هپبورن (شکوه کلاسیک)",
-            commissionForSalonToman = "۲,۵۰۰,۰۰۰ تومان"
-        ),
-        MaisonGarmentItem(
-            id = "g-bride-02",
-            maisonId = "maison-royal-niavaran",
-            maisonName = "مزون رویال کوتور (شهدخت)",
-            maisonAddress = "نیاوران، سه راه یاسر، پلاک ۲۴",
-            maisonPhone = "۰۲۱-۲۲۸۰۴۵۱۰",
-            licenseCode = "صنف-۹۸۴۲۱/الف",
-            titleFa = "لباس عروس مدل ماهی اسلیم‌فیت مرواریددوزی با شنل حریر دنباله‌دار",
-            category = "لباس عروس VIP",
-            fabricAndCut = "ساتن آمریکایی میساکی، سنگ‌دوزی کریستال زیرو، پشت بنددار قابل تنظیم",
-            rentalPriceToman = "۱۶,۰۰۰,۰۰۰ تومان",
-            purchasePriceToman = "۴۸,۰۰۰,۰۰۰ تومان",
-            celebrityFitStyle = "تن‌خور سبک زندایا و بلا حدید (مدرن و بسیار کشیده)",
-            commissionForSalonToman = "۲,۰۰۰,۰۰۰ تومان"
-        ),
-        MaisonGarmentItem(
-            id = "g-groom-01",
-            maisonId = "maison-diplomat-jordan",
-            maisonName = "خانه تاکسیدو و پوشاک دامادی دیپلمات",
-            maisonAddress = "جردن، نبش گلشهر، برج آیتا",
-            maisonPhone = "۰۲۱-۸۸۷۶۳۲۹۰",
-            licenseCode = "صنف-۷۱۲۰۴/پ",
-            titleFa = "تاکسیدو دامادی یقه شال ساتن ایتالیایی با جلیقه و دکمه‌سردست طلاکوپ",
-            category = "کت‌وشلوار و تاکسیدو داماد",
-            fabricAndCut = "پارچه ویتاله باربریس ایتالیا سوپر ۱۶۰ پشم خالص، دوخت تمام صنعتی با تن‌خور دراپ ۷",
-            rentalPriceToman = "۱۲,۰۰۰,۰۰۰ تومان",
-            purchasePriceToman = "۳۸,۰۰۰,۰۰۰ تومان",
-            celebrityFitStyle = "تن‌خور سبک دنیل کریگ (جیمز باند) و دیوید بکهام",
-            commissionForSalonToman = "۱,۸۰۰,۰۰۰ تومان"
-        ),
-        MaisonGarmentItem(
-            id = "g-groom-02",
-            maisonId = "maison-diplomat-jordan",
-            maisonName = "خانه تاکسیدو و پوشاک دامادی دیپلمات",
-            maisonAddress = "جردن، نبش گلشهر، برج آیتا",
-            maisonPhone = "۰۲۱-۸۸۷۶۳۲۹۰",
-            licenseCode = "صنف-۷۱۲۰۴/پ",
-            titleFa = "کت اسموکینگ سفید عاجی سلطنتی با شلوار مشکی مات و ساسبند ساتن",
-            category = "کت‌وشلوار و تاکسیدو داماد",
-            fabricAndCut = "کرپ ابریشم دانه درشت با دکمه‌های روکش‌دار پارچه‌ای و پاپیون مخمل ابریشم",
-            rentalPriceToman = "۱۴,۵۰۰,۰۰۰ تومان",
-            purchasePriceToman = "۴۲,۰۰۰,۰۰۰ تومان",
-            celebrityFitStyle = "تن‌خور هالیوودی فرش قرمز مت گالا",
-            commissionForSalonToman = "۲,۲۰۰,۰۰۰ تومان"
-        ),
-        MaisonGarmentItem(
-            id = "g-form-01",
-            maisonId = "maison-elysee-home",
-            maisonName = "استودیو طراحی و دوخت الیزه (مزون VIP)",
-            maisonAddress = "فرمانیه، خیابان سنبل، مجتمع کاکتوس",
-            maisonPhone = "۰۹۱۲-۳۴۰۷۸۹۰",
-            licenseCode = "شناسه هنری مد و لباس ۹۴۱۰۲",
-            titleFa = "پیراهن فرمالیته شاین صورتی مایل به صدفی با چاک بلند و آستین افتاده",
-            category = "لباس فرمالیته و شب",
-            fabricAndCut = "حریر شاین زری‌بافت ترک با پلیسه‌دوزی تمام دست‌دوز و کاپ سینه‌دار",
-            rentalPriceToman = "۹,۵۰۰,۰۰۰ تومان",
-            purchasePriceToman = "۲۹,۰۰۰,۰۰۰ تومان",
-            celebrityFitStyle = "تن‌خور سبک تیلور سوئیفت و کندال جنر (ایده‌آل عکاسی کویر و ساحل)",
-            commissionForSalonToman = "۱,۲۰۰,۰۰۰ تومان"
-        )
+    private val brideStyles = listOf(
+        "پرنسسی سوپر رویال با دانتل فرانسه و گن‌دوزی ترک",
+        "مدل ماهی اسلیم‌فیت مرواریددوزی با شنل حریر دنباله‌دار",
+        "اسکارلت کلوش شاین نقره‌ای با کریستال سواروسکی",
+        "مینیمال اروپایی ساتن آمریکایی میساکی با یقه قایقی",
+        "وینتیج ویکتوریایی با آستین کلوش گیپور دست‌بافت",
+        "بوهو ساحلی سبک با حریر شاین و چاک نامتقارن",
+        "دکلته کاپ‌دار با کمر فنردوزی ۱۸ خطی فرانسوی",
+        "مدل ای-لاین (A-Line) با شکوفه‌های بهاری سه‌بعدی برجسته",
+        "رویال کلوش با دامن طبقاتی تور ارگانزا و دنباله ۲ متری",
+        "پف‌دار اشرافی با بالاتنه سنگ‌دوزی تمام دست‌دوز"
     )
+
+    private val groomStyles = listOf(
+        "تاکسیدو یقه شال ساتن ایتالیایی با جلیقه دبل برست",
+        "کت اسموکینگ سفید عاجی سلطنتی با شلوار مشکی مات",
+        "کت‌وشلوار کلاسیک مشکی سوپر ۱۶۰ ویتاله باربریس ایتالیا",
+        "سرمه‌ای دیپلمات با جلیقه طوسی روشن و دکمه‌های نقره‌ای",
+        "تاکسیدو مخمل یقه آرشال زرشکی شاهانه با ساسبند ساتن",
+        "کت‌وشلوار طوسی فیلی ایتالیایی با دوخت تمام دست‌دوز",
+        "اسموکینگ مشکی براق با پاپیون ابریشم و پیراهن پین‌تاک",
+        "کت شتری اشرافی فرمالیته با شلوار کرم عاجی و پوشت هماهنگ"
+    )
+
+    val realMaisonGarments: List<MaisonGarmentItem> = buildList {
+        // ۱. ۵۰ عدد لباس عروس VIP
+        for (i in 1..50) {
+            val styleIdx = (i - 1) % brideStyles.size
+            val baseStyle = brideStyles[styleIdx]
+            val variant = when ((i - 1) / brideStyles.size) {
+                0 -> "کالکشن رویال ۲۰۲۵"
+                1 -> "نسخه لیمیتد الماس"
+                2 -> "طراحی مزون میلان"
+                3 -> "سفارشی مروارید پاریس"
+                else -> "پرویموم سفیر مد"
+            }
+            val rentalPrice = 14 + (i % 9) * 2
+            val buyPrice = rentalPrice * 3 + 10
+            val commission = 1800000 + (i % 7) * 200000
+
+            add(
+                MaisonGarmentItem(
+                    id = "g-bride-${String.format("%02d", i)}",
+                    maisonId = if (i % 2 == 0) "maison-royal-niavaran" else "maison-elysee-home",
+                    maisonName = if (i % 2 == 0) "مزون رویال کوتور (شهدخت)" else "استودیو الیزه VIP",
+                    maisonAddress = if (i % 2 == 0) "نیاوران، سه راه یاسر، پلاک ۲۴" else "فرمانیه، مجتمع کاکتوس",
+                    maisonPhone = if (i % 2 == 0) "۰۲۱-۲۲۸۰۴۵۱۰" else "۰۹۱۲-۳۴۰۷۸۹۰",
+                    licenseCode = "صنف-۹۸۴۲۱/الف",
+                    titleFa = "لباس عروس کد B-$i: $baseStyle ($variant)",
+                    category = "لباس عروس VIP",
+                    fabricAndCut = "دانتل اصل فرانسه، آستر ابریشم، گن‌دوزی ترک با فنر استخوان وال جهت باریک‌سازی دور کمر",
+                    rentalPriceToman = "$rentalPrice,۵۰۰,۰۰۰ تومان",
+                    purchasePriceToman = "$buyPrice,۰۰۰,۰۰۰ تومان",
+                    celebrityFitStyle = when (i % 4) {
+                        0 -> "تن‌خور گریس کلی و آدری هپبورن (شکوه کلاسیک)"
+                        1 -> "تن‌خور بلا حدید و زندایا (کشیده و مدرن)"
+                        2 -> "تن‌خور مارگو رابی (پرنسسی و درخشان)"
+                        else -> "تن‌خور کیت میدلتون (سلطنتی و باوقار)"
+                    },
+                    commissionForSalonToman = "${String.format("%,d", commission)} تومان"
+                )
+            )
+        }
+
+        // ۲. ۳۵ عدد کت‌وشلوار و تاکسیدو داماد
+        for (j in 1..35) {
+            val styleIdx = (j - 1) % groomStyles.size
+            val baseStyle = groomStyles[styleIdx]
+            val variant = when ((j - 1) / groomStyles.size) {
+                0 -> "سری دیپلمات میلان"
+                1 -> "کوتور ناپولی ایتالیا"
+                2 -> "فرش قرمز کن"
+                3 -> "بلک‌تای لندنی"
+                else -> "اشرافی درباری"
+            }
+            val rentalPrice = 10 + (j % 6) * 2
+            val buyPrice = rentalPrice * 3 + 8
+            val commission = 1400000 + (j % 5) * 200000
+
+            add(
+                MaisonGarmentItem(
+                    id = "g-groom-${String.format("%02d", j)}",
+                    maisonId = "maison-diplomat-jordan",
+                    maisonName = "خانه تاکسیدو و پوشاک دامادی دیپلمات",
+                    maisonAddress = "جردن، نبش گلشهر، برج آیتا",
+                    maisonPhone = "۰۲۱-۸۸۷۶۳۲۹۰",
+                    licenseCode = "صنف-۷۱۲۰۴/پ",
+                    titleFa = "پوشاک داماد کد G-$j: $baseStyle ($variant)",
+                    category = "کت‌وشلوار و تاکسیدو داماد",
+                    fabricAndCut = "پارچه ویتاله باربریس یا لورو پیانا ایتالیا پشم سوپر ۱۶۰، آستر ابریشم طرح‌دار، تن‌خور اسلیم دراپ ۷",
+                    rentalPriceToman = "$rentalPrice,۰۰۰,۰۰۰ تومان",
+                    purchasePriceToman = "$buyPrice,۰۰۰,۰۰۰ تومان",
+                    celebrityFitStyle = when (j % 4) {
+                        0 -> "تن‌خور دنیل کریگ (جیمز باند مامور ۰۰۷)"
+                        1 -> "تن‌خور دیوید بکهام (کت‌وشلوار انگلیسی شیک)"
+                        2 -> "تن‌خور لئوناردو دی‌کاپریو (اسموکینگ گتسبی بزرگ)"
+                        else -> "تن‌خور تیموتی شالامی (مدرن و فشن آوانگارد)"
+                    },
+                    commissionForSalonToman = "${String.format("%,d", commission)} تومان"
+                )
+            )
+        }
+
+        // ۳. ۱۵ عدد لباس فرمالیته و شب
+        for (k in 1..15) {
+            val rentalPrice = 8 + (k % 4) * 2
+            val buyPrice = rentalPrice * 3
+            val commission = 1100000 + (k % 4) * 150000
+
+            add(
+                MaisonGarmentItem(
+                    id = "g-form-${String.format("%02d", k)}",
+                    maisonId = "maison-elysee-home",
+                    maisonName = "استودیو الیزه VIP",
+                    maisonAddress = "فرمانیه، مجتمع کاکتوس",
+                    maisonPhone = "۰۹۱۲-۳۴۰۷۸۹۰",
+                    licenseCode = "شناسه هنری ۹۴۱۰۲",
+                    titleFa = "پیراهن فرمالیته و شب کد F-$k: حریر شاین زری‌بافت و چاک‌دار",
+                    category = "لباس فرمالیته و شب",
+                    fabricAndCut = "حریر ترک ارگانزا با کاپ سینه دست‌ساز و پلیسه هنری",
+                    rentalPriceToman = "$rentalPrice,۵۰۰,۰۰۰ تومان",
+                    purchasePriceToman = "$buyPrice,۰۰۰,۰۰۰ تومان",
+                    celebrityFitStyle = "تن‌خور کندال جنر و تیلور سوئیفت",
+                    commissionForSalonToman = "${String.format("%,d", commission)} تومان"
+                )
+            )
+        }
+    }
 }

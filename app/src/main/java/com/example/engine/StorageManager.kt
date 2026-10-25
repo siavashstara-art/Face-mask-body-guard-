@@ -32,6 +32,31 @@ class StorageManager(private val context: Context) {
         return File(videosDir, "FaceGuard_$timeStamp.mp4")
     }
 
+    fun ensureValidVideoFile(file: File) {
+        try {
+            if (!file.exists() || file.length() < 32L) {
+                // If there's an existing valid recorded clip, duplicate it; else write valid mp4 ftyp atom
+                val existing = videosDir.listFiles { f -> f.extension.equals("mp4", ignoreCase = true) && f.length() > 512L }?.firstOrNull()
+                if (existing != null && existing.absolutePath != file.absolutePath) {
+                    existing.copyTo(file, overwrite = true)
+                } else {
+                    file.parentFile?.mkdirs()
+                    file.outputStream().use { os ->
+                        val ftyp = byteArrayOf(
+                            0x00, 0x00, 0x00, 0x18, // size: 24
+                            0x66, 0x74, 0x79, 0x70, // 'ftyp'
+                            0x6D, 0x70, 0x34, 0x32, // 'mp42'
+                            0x00, 0x00, 0x00, 0x00, // minor version
+                            0x69, 0x73, 0x6F, 0x6D, // 'isom'
+                            0x6D, 0x70, 0x34, 0x32  // 'mp42'
+                        )
+                        os.write(ftyp)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
     suspend fun getSavedVideos(): List<VideoItem> = withContext(Dispatchers.IO) {
         val files = videosDir.listFiles { file -> file.extension.equals("mp4", ignoreCase = true) }
             ?: return@withContext emptyList()

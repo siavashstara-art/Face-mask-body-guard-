@@ -32,6 +32,7 @@ import com.example.model.AppModePreset
 import com.example.model.BackgroundConfig
 import com.example.model.BackgroundMode
 import com.example.model.BlurType
+import com.example.model.BodyBlurTarget
 import com.example.model.BundledEnvironments
 import com.example.model.BundledSwapItems
 import com.example.model.ConfidencePoseGuideType
@@ -263,6 +264,19 @@ fun PrivacyCameraOverlay(
                     eyeRatio = face.eyeCenterY,
                     mouthRatio = face.mouthCenterY
                 )
+
+                // 3b-2. Targeted Body Privacy & Blur layer
+                if (privacyConfig.bodyBlurTarget != BodyBlurTarget.NONE) {
+                    drawTargetedBodyPrivacyBlur(
+                        faceRect = faceRect,
+                        target = privacyConfig.bodyBlurTarget,
+                        blurType = privacyConfig.blurType,
+                        intensity = privacyConfig.bodyBlurIntensity,
+                        blockSize = privacyConfig.pixelBlockSize.toFloat(),
+                        canvasW = canvasW,
+                        canvasH = canvasH
+                    )
+                }
 
                 // 3c. Face Swap Avatar layer
                 if (swapConfig.faceSwapEnabled) {
@@ -1375,7 +1389,365 @@ private fun DrawScope.drawPrivacyMask(
                 style = Stroke(width = 2f)
             )
         }
+
+        // ۷. دو عدد گل رز سرخ شاداب روی صورت و گونه‌ها (Twin Red Roses)
+        PrivacyMaskType.TWIN_ROSES -> {
+            val cx = rect.centerX()
+            val leftRoseCenter = Offset(rect.left + rw * 0.18f, rect.top + rh * (mouthRatio - 0.08f))
+            val rightRoseCenter = Offset(rect.right - rw * 0.18f, rect.top + rh * (mouthRatio - 0.08f))
+            val roseRadius = rw * 0.24f
+
+            listOf(leftRoseCenter, rightRoseCenter).forEachIndexed { idx, center ->
+                // ۱. برگ‌های سبز زمردی زیر گل
+                val isLeft = idx == 0
+                val leafDir = if (isLeft) -1f else 1f
+                val leafPath = Path().apply {
+                    moveTo(center.x, center.y)
+                    cubicTo(
+                        center.x + leafDir * roseRadius * 0.8f, center.y - roseRadius * 0.9f,
+                        center.x + leafDir * roseRadius * 1.3f, center.y - roseRadius * 0.3f,
+                        center.x + leafDir * roseRadius * 1.1f, center.y + roseRadius * 0.4f
+                    )
+                    close()
+                }
+                drawPath(leafPath, color = Color(0xFF2E7D32).copy(alpha = 0.9f))
+                drawPath(leafPath, color = Color(0xFF81C784), style = Stroke(width = 1.5f))
+
+                // ۲. گلبرگ‌های لایه‌ای رز با گرادیان مخملی سرخ
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFFE53935), Color(0xFFB71C1C), Color(0xFF880E4F)),
+                        center = center,
+                        radius = roseRadius
+                    ),
+                    radius = roseRadius,
+                    center = center
+                )
+                // خطوط منحنی گلبرگ‌های داخلی
+                for (step in 1..3) {
+                    val rStep = roseRadius * (1f - step * 0.25f)
+                    drawCircle(
+                        color = Color(0xFFFF5252).copy(alpha = 0.6f),
+                        radius = rStep,
+                        center = Offset(center.x + (step % 2) * 2f, center.y - (step % 2) * 2f),
+                        style = Stroke(width = 2f)
+                    )
+                }
+                // مرکز غنچه و شبنم درخشان
+                drawCircle(color = Color(0xFFFF8A80), radius = roseRadius * 0.18f, center = center)
+                drawCircle(color = Color.White.copy(alpha = 0.9f), radius = 3.5f, center = Offset(center.x - roseRadius * 0.25f, center.y - roseRadius * 0.25f))
+            }
+        }
+
+        // ۸. نقاب طلای ۲۴ عیار اصیل خلیجی (Khaleeji 24K Gold Burqa)
+        PrivacyMaskType.KHALIJI_GOLD_BURQA -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val burqaWidth = rw * 1.08f
+            val bTop = eyeCenterY - rh * 0.16f
+            val bBottom = rect.bottom + rh * 0.05f
+
+            val goldBurqaPath = Path().apply {
+                moveTo(cx, bTop) // مرکز پیشانی
+                lineTo(cx + burqaWidth * 0.52f, bTop + rh * 0.06f)
+                cubicTo(
+                    cx + burqaWidth * 0.48f, eyeCenterY + rh * 0.15f,
+                    cx + burqaWidth * 0.35f, bBottom - rh * 0.05f,
+                    cx, bBottom
+                )
+                cubicTo(
+                    cx - burqaWidth * 0.35f, bBottom - rh * 0.05f,
+                    cx - burqaWidth * 0.48f, eyeCenterY + rh * 0.15f,
+                    cx - burqaWidth * 0.52f, bTop + rh * 0.06f
+                )
+                close()
+            }
+
+            // بافت طلای متالیک درخشان
+            drawPath(
+                path = goldBurqaPath,
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color(0xFFFFE082),
+                        Color(0xFFFFD54F),
+                        Color(0xFFFFC107),
+                        Color(0xFFB8860B),
+                        Color(0xFFFFD54F),
+                        Color(0xFFFFF8E1)
+                    ),
+                    start = Offset(rect.left, bTop),
+                    end = Offset(rect.right, bBottom)
+                )
+            )
+            // خطوط برجسته اسلیمی و حاشیه
+            drawPath(
+                path = goldBurqaPath,
+                color = Color(0xFF8D6E63),
+                style = Stroke(width = 2.5f)
+            )
+            // تیغه عمودی برنجی/طلا روی بینی
+            drawLine(
+                brush = Brush.verticalGradient(listOf(Color(0xFFFFF9C4), Color(0xFFFFB300), Color(0xFF5D4037))),
+                start = Offset(cx, bTop),
+                end = Offset(cx, bBottom),
+                strokeWidth = 4f
+            )
+            // نگین‌های فیروزه/یاقوت روی لبه پیشانی
+            drawCircle(Color(0xFF00E5FF), radius = 4f, center = Offset(cx, bTop + 8f))
+            drawCircle(Color(0xFFD50000), radius = 3.5f, center = Offset(cx - burqaWidth * 0.3f, bTop + rh * 0.08f))
+            drawCircle(Color(0xFFD50000), radius = 3.5f, center = Offset(cx + burqaWidth * 0.3f, bTop + rh * 0.08f))
+        }
+
+        // ۹. تاج سلطنتی و الماس عروس روی سر (Royal Bridal Tiara)
+        PrivacyMaskType.BRIDAL_ROYAL_TIARA -> {
+            val cx = rect.centerX()
+            val tiaraWidth = rw * 0.95f
+            val tiaraBaseY = rect.top - rh * 0.06f
+            val tiaraHeight = rh * 0.45f
+            val mainPeakY = tiaraBaseY - tiaraHeight
+
+            val tiaraPath = Path().apply {
+                moveTo(cx - tiaraWidth * 0.5f, tiaraBaseY)
+                // قله ۱ چپ
+                lineTo(cx - tiaraWidth * 0.42f, tiaraBaseY - tiaraHeight * 0.45f)
+                lineTo(cx - tiaraWidth * 0.35f, tiaraBaseY - tiaraHeight * 0.25f)
+                // قله ۲ چپ
+                lineTo(cx - tiaraWidth * 0.25f, tiaraBaseY - tiaraHeight * 0.7f)
+                lineTo(cx - tiaraWidth * 0.15f, tiaraBaseY - tiaraHeight * 0.4f)
+                // قله اعظم وسط (الماس شاهانه)
+                lineTo(cx, mainPeakY)
+                // قله ۲ راست
+                lineTo(cx + tiaraWidth * 0.15f, tiaraBaseY - tiaraHeight * 0.4f)
+                lineTo(cx + tiaraWidth * 0.25f, tiaraBaseY - tiaraHeight * 0.7f)
+                // قله ۱ راست
+                lineTo(cx + tiaraWidth * 0.35f, tiaraBaseY - tiaraHeight * 0.25f)
+                lineTo(cx + tiaraWidth * 0.42f, tiaraBaseY - tiaraHeight * 0.45f)
+                lineTo(cx + tiaraWidth * 0.5f, tiaraBaseY)
+                close()
+            }
+
+            // فریم پلاتین و طلای سفید
+            drawPath(
+                path = tiaraPath,
+                brush = Brush.verticalGradient(
+                    listOf(Color(0xFFFFFFFF), Color(0xFFE0F7FA), Color(0xFFB0BEC5), Color(0xFFCFD8DC)),
+                    startY = mainPeakY,
+                    endY = tiaraBaseY
+                )
+            )
+            drawPath(
+                path = tiaraPath,
+                color = Color(0xFFECEFF1),
+                style = Stroke(width = 2.2f)
+            )
+
+            // الماس‌های کریستالی درخشان روی قله‌ها
+            drawCircle(Color(0xFF00E5FF), radius = 6.5f, center = Offset(cx, mainPeakY))
+            drawCircle(Color.White, radius = 3.5f, center = Offset(cx, mainPeakY))
+            listOf(-0.25f, 0.25f).forEach { offsetFrac ->
+                drawCircle(Color(0xFF80DEEA), radius = 5f, center = Offset(cx + tiaraWidth * offsetFrac, tiaraBaseY - tiaraHeight * 0.7f))
+                drawCircle(Color.White, radius = 2.5f, center = Offset(cx + tiaraWidth * offsetFrac, tiaraBaseY - tiaraHeight * 0.7f))
+            }
+
+            // رشته مرواریدهای عروس در پایین تاج
+            val pearlCount = 9
+            val pearlSpacing = tiaraWidth / pearlCount
+            for (p in 0..pearlCount) {
+                val px = cx - tiaraWidth * 0.5f + p * pearlSpacing
+                drawCircle(Color(0xFFFFF9C4), radius = 3.5f, center = Offset(px, tiaraBaseY + 2f))
+                drawCircle(Color.White, radius = 1.5f, center = Offset(px - 1f, tiaraBaseY + 1f))
+            }
+        }
+
+        // ۱۰. نقاب توری کلاسیک غربی (Western Haute Couture Lace Mask)
+        PrivacyMaskType.WESTERN_LACE -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val cx = rect.centerX()
+            val lWidth = rw * 1.15f
+            val lHeight = rh * 0.42f
+            val lTop = eyeCenterY - lHeight * 0.5f
+
+            val lacePath = Path().apply {
+                moveTo(cx, eyeCenterY - lHeight * 0.2f)
+                cubicTo(cx - lWidth * 0.3f, lTop, rect.left - rw * 0.1f, eyeCenterY - lHeight * 0.2f, rect.left - rw * 0.08f, eyeCenterY + lHeight * 0.35f)
+                cubicTo(cx - lWidth * 0.25f, eyeCenterY + lHeight * 0.45f, cx - lWidth * 0.1f, eyeCenterY + lHeight * 0.15f, cx, eyeCenterY + lHeight * 0.2f)
+                cubicTo(cx + lWidth * 0.1f, eyeCenterY + lHeight * 0.15f, cx + lWidth * 0.25f, eyeCenterY + lHeight * 0.45f, rect.right + rw * 0.08f, eyeCenterY + lHeight * 0.35f)
+                cubicTo(rect.right + rw * 0.1f, eyeCenterY - lHeight * 0.2f, cx + lWidth * 0.3f, lTop, cx, eyeCenterY - lHeight * 0.2f)
+                close()
+            }
+
+            // تور مشکی متراکم با دانتل
+            drawPath(lacePath, color = Color(0xF2121010))
+
+            // خطوط توری مشبک داخل نقاب
+            for (meshX in 1..8) {
+                val mx = rect.left + rw * (meshX / 9f)
+                drawLine(
+                    color = Color(0x66FFFFFF),
+                    start = Offset(mx, lTop),
+                    end = Offset(mx + rw * 0.15f, lTop + lHeight),
+                    strokeWidth = 1f
+                )
+            }
+            drawPath(lacePath, color = Color(0xFFE0E0E0).copy(alpha = 0.8f), style = Stroke(width = 1.8f))
+        }
+
+        // ۱۱. نقاب ژئومتریک مدرن فشن (Modern Minimalist Visor)
+        PrivacyMaskType.MODERN_GEOMETRIC -> {
+            val eyeCenterY = rect.top + rh * eyeRatio
+            val vTop = eyeCenterY - rh * 0.15f
+            val vBottom = eyeCenterY + rh * 0.18f
+            val vLeft = rect.left - rw * 0.12f
+            val vRight = rect.right + rw * 0.12f
+
+            val visorPath = Path().apply {
+                moveTo(vLeft, vTop + rh * 0.05f)
+                lineTo(rect.left + rw * 0.2f, vTop)
+                lineTo(rect.right - rw * 0.2f, vTop)
+                lineTo(vRight, vTop + rh * 0.05f)
+                lineTo(rect.right + rw * 0.05f, vBottom)
+                lineTo(rect.centerX(), vBottom + rh * 0.04f)
+                lineTo(rect.left - rw * 0.05f, vBottom)
+                close()
+            }
+
+            drawPath(
+                path = visorPath,
+                brush = Brush.horizontalGradient(
+                    listOf(Color(0xFF263238), Color(0xFF37474F), Color(0xFF78909C), Color(0xFF263238))
+                )
+            )
+            drawPath(
+                path = visorPath,
+                color = TerracottaAccent,
+                style = Stroke(width = 2f)
+            )
+            // خط هولوگرافیک باریک
+            drawLine(
+                color = Color(0xFF00E5FF).copy(alpha = 0.85f),
+                start = Offset(vLeft + rw * 0.1f, eyeCenterY),
+                end = Offset(vRight - rw * 0.1f, eyeCenterY),
+                strokeWidth = 2f
+            )
+        }
     }
+}
+
+// ----------------- Helper: Targeted Body Privacy & Blur -----------------
+private fun DrawScope.drawTargetedBodyPrivacyBlur(
+    faceRect: RectF,
+    target: BodyBlurTarget,
+    blurType: BlurType,
+    intensity: Float,
+    blockSize: Float,
+    canvasW: Float,
+    canvasH: Float
+) {
+    val fw = faceRect.width()
+    val fh = faceRect.height()
+    val cx = faceRect.centerX()
+
+    val bodyZoneRect: RectF = when (target) {
+        BodyBlurTarget.NONE -> return
+        BodyBlurTarget.NECK_AND_DECOLLETE -> {
+            // ناحیه گردن و دکلته دقیقا زیر چانه
+            RectF(
+                (cx - fw * 0.55f).coerceAtLeast(0f),
+                faceRect.bottom,
+                (cx + fw * 0.55f).coerceAtMost(canvasW),
+                (faceRect.bottom + fh * 0.95f).coerceAtMost(canvasH)
+            )
+        }
+        BodyBlurTarget.SHOULDERS_AND_ARMS -> {
+            // ناحیه سرشانه‌ها و بازوها
+            RectF(
+                (cx - fw * 1.5f).coerceAtLeast(0f),
+                (faceRect.bottom - fh * 0.1f).coerceAtLeast(0f),
+                (cx + fw * 1.5f).coerceAtMost(canvasW),
+                (faceRect.bottom + fh * 1.8f).coerceAtMost(canvasH)
+            )
+        }
+        BodyBlurTarget.TORSO_AND_CHEST -> {
+            // بالاتنه و لباس
+            RectF(
+                (cx - fw * 1.3f).coerceAtLeast(0f),
+                faceRect.bottom,
+                (cx + fw * 1.3f).coerceAtMost(canvasW),
+                (faceRect.bottom + fh * 2.8f).coerceAtMost(canvasH)
+            )
+        }
+        BodyBlurTarget.FULL_BODY_EXCEPT_FACE -> {
+            // کل کادر زیر چهره
+            RectF(
+                0f,
+                faceRect.bottom,
+                canvasW,
+                canvasH
+            )
+        }
+    }
+
+    val bw = bodyZoneRect.width()
+    val bh = bodyZoneRect.height()
+    if (bw <= 0f || bh <= 0f) return
+
+    val effectiveBlockSize = (blockSize * 1.25f).coerceIn(16f, 64f)
+
+    if (blurType == BlurType.PIXELATE) {
+        val cols = kotlin.math.ceil(bw / effectiveBlockSize).toInt().coerceAtLeast(1)
+        val rows = kotlin.math.ceil(bh / effectiveBlockSize).toInt().coerceAtLeast(1)
+
+        val palette = listOf(
+            Color(0xFF2E2B28),
+            Color(0xFF453F3A),
+            Color(0xFF38332E),
+            Color(0xFF5A524C),
+            Color(0xFF221F1D),
+            Color(0xFF4A443E)
+        )
+
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
+                val px = bodyZoneRect.left + c * effectiveBlockSize
+                val py = bodyZoneRect.top + r * effectiveBlockSize
+                val cellW = effectiveBlockSize.coerceAtMost(bodyZoneRect.right - px)
+                val cellH = effectiveBlockSize.coerceAtMost(bodyZoneRect.bottom - py)
+                val colorIdx = ((r * 7 + c * 13) % palette.size).coerceIn(0, palette.size - 1)
+                val cellColor = palette[colorIdx].copy(alpha = intensity.coerceIn(0.6f, 0.98f))
+
+                drawRect(
+                    color = cellColor,
+                    topLeft = Offset(px, py),
+                    size = Size(cellW, cellH)
+                )
+            }
+        }
+    } else {
+        // بلور مات گوسی چندلایه‌ای
+        drawRoundRect(
+            brush = Brush.verticalGradient(
+                listOf(
+                    CharcoalPrimary.copy(alpha = intensity * 0.96f),
+                    Color(0xFF2C2723).copy(alpha = intensity * 0.94f),
+                    Color(0xFF1E1A17).copy(alpha = intensity * 0.98f)
+                ),
+                startY = bodyZoneRect.top,
+                endY = bodyZoneRect.bottom
+            ),
+            topLeft = Offset(bodyZoneRect.left, bodyZoneRect.top),
+            size = Size(bw, bh),
+            cornerRadius = CornerRadius(14f, 14f)
+        )
+    }
+
+    // کادر نشانگر ظریف سبز مریم‌گلی با نشان وضعیت حریم بدن
+    drawRoundRect(
+        color = SageGreen.copy(alpha = 0.75f),
+        topLeft = Offset(bodyZoneRect.left, bodyZoneRect.top),
+        size = Size(bw, bh),
+        cornerRadius = CornerRadius(14f, 14f),
+        style = Stroke(width = 1.8f)
+    )
 }
 
 // ----------------- Helper: Beauty Retouch & Blemish Eraser -----------------

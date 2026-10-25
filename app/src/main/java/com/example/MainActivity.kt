@@ -94,7 +94,10 @@ class MainActivity : ComponentActivity() {
                                         isPersian = appLanguage == AppLanguage.PERSIAN,
                                         onNavigateBack = { viewModel.navigateTo("facecard") }
                                     )
-                                    "camera" -> CameraPermissionScreen(isPersian = appLanguage == AppLanguage.PERSIAN) {
+                                    "camera" -> CameraPermissionScreen(
+                                        isPersian = appLanguage == AppLanguage.PERSIAN,
+                                        onNavigateBack = { viewModel.navigateTo("facecard") }
+                                    ) {
                                         CameraHomeScreen(
                                             viewModel = viewModel,
                                             onNavigateToGallery = { viewModel.navigateTo("gallery") },

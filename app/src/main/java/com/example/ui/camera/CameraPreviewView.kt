@@ -64,9 +64,21 @@ fun CameraPreviewView(
                 it.surfaceProvider = previewView.surfaceProvider
             }
 
+            // Determine effective camera selector (check if target camera exists on hardware)
+            val effectiveSelector = if (cameraProvider.hasCamera(cameraSelector)) {
+                cameraSelector
+            } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                CameraSelector.DEFAULT_FRONT_CAMERA
+            } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                CameraSelector.DEFAULT_BACK_CAMERA
+            } else {
+                cameraSelector
+            }
+
             // Lightweight, memory-safe image analysis for face detection
             var frameCounter = 0
             val imageAnalysis = ImageAnalysis.Builder()
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .setTargetResolution(Size(480, 640))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
@@ -76,36 +88,45 @@ fun CameraPreviewView(
                             // Drop frame if previous analysis is still ongoing or throttle to every 4th frame
                             if (++frameCounter % 4 == 0 && !isAnalyzing.get()) {
                                 isAnalyzing.set(true)
-                                val bitmap = imageProxy.toBitmap()
-                                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                                val rotatedBitmap = if (rotationDegrees != 0) {
-                                    val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
-                                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                                    bitmap.recycle()
-                                    rotated
-                                } else {
-                                    bitmap
+                                val bitmap = try {
+                                    imageProxy.toBitmap()
+                                } catch (_: Throwable) {
+                                    null
                                 }
 
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    try {
-                                        val isFront = cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA
-                                        val detected = faceDetectionEngine.detectFacesOnBitmap(
-                                            sourceBitmap = rotatedBitmap,
-                                            isFrontCamera = isFront
-                                        )
-                                        onFacesUpdated(detected)
-                                    } catch (_: Throwable) {
-                                    } finally {
-                                        try { rotatedBitmap.recycle() } catch (_: Throwable) {}
-                                        isAnalyzing.set(false)
+                                if (bitmap != null) {
+                                    val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                                    val rotatedBitmap = if (rotationDegrees != 0) {
+                                        val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+                                        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                                        try { bitmap.recycle() } catch (_: Throwable) {}
+                                        rotated
+                                    } else {
+                                        bitmap
                                     }
+
+                                    CoroutineScope(Dispatchers.Default).launch {
+                                        try {
+                                            val isFront = effectiveSelector == CameraSelector.DEFAULT_FRONT_CAMERA
+                                            val detected = faceDetectionEngine.detectFacesOnBitmap(
+                                                sourceBitmap = rotatedBitmap,
+                                                isFrontCamera = isFront
+                                            )
+                                            onFacesUpdated(detected)
+                                        } catch (_: Throwable) {
+                                        } finally {
+                                            try { rotatedBitmap.recycle() } catch (_: Throwable) {}
+                                            isAnalyzing.set(false)
+                                        }
+                                    }
+                                } else {
+                                    isAnalyzing.set(false)
                                 }
                             }
                         } catch (_: Throwable) {
                             isAnalyzing.set(false)
                         } finally {
-                            imageProxy.close()
+                            try { imageProxy.close() } catch (_: Throwable) {}
                         }
                     }
                 }
@@ -120,7 +141,7 @@ fun CameraPreviewView(
                         .addUseCase(videoCapture)
                         .addUseCase(imageAnalysis)
                         .build()
-                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, useCaseGroup)
+                    cameraProvider.bindToLifecycle(lifecycleOwner, effectiveSelector, useCaseGroup)
                     boundSuccessfully = true
                 } catch (_: Throwable) {
                     boundSuccessfully = false
@@ -134,7 +155,7 @@ fun CameraPreviewView(
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner,
-                        cameraSelector,
+                        effectiveSelector,
                         preview,
                         videoCapture
                     )
@@ -150,7 +171,7 @@ fun CameraPreviewView(
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner,
-                        cameraSelector,
+                        effectiveSelector,
                         preview,
                         imageAnalysis
                     )
@@ -159,7 +180,7 @@ fun CameraPreviewView(
                     // Absolute fallback: Preview only
                     try {
                         cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview)
+                        cameraProvider.bindToLifecycle(lifecycleOwner, effectiveSelector, preview)
                     } catch (_: Throwable) {}
                 }
             }
