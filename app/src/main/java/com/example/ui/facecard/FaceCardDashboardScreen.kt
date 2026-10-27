@@ -445,5 +445,160 @@ fun FaceCardDashboardScreen(
                 }
             }
         }
+
+        // ================================================================
+        // لوح یادبود پدر و اعتبار تجاری توسعه‌دهنده (Merchant Prestige & Memorial)
+        // ================================================================
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E7)),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFD4AF37))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, tint = Color(0xFFB8860B), modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "به یاد پدر مرحومم حاج حسین آقای علی‌میری",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5A4300)
+                    )
+                }
+                Text(
+                    text = "از تاجران بسیار خوشنام، سرشناس و معتبر بازار فرش ایران و جهان",
+                    fontSize = 12.sp,
+                    color = Color(0xFF7A5C00),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        // ================================================================
+        // محل کار رسمی و گالری اصلی (Official Business Address)
+        // ================================================================
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F8E9)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SageGreen.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Storefront, contentDescription = null, tint = SageGreen, modifier = Modifier.size(32.dp))
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "محل کار، فروشگاه و گالری اصلی بازرگانی:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SageGreen
+                    )
+                    Text(
+                        text = "بازار فرش ایران، خیابان خیام، بازار فرش ایران، پلاک ۴۸، فرش حاج حسین علی‌میری و پسران.",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CharcoalPrimary,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+
+        // ================================================================
+        // سبد کامل پلتفرم‌ها و اکوسیستم نرم‌افزاری آقای اکبر علی‌میری (سیاوش)
+        // ================================================================
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = WarmSurface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, WarmBorder)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.WorkspacePremium, contentDescription = null, tint = TerracottaAccent, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "اکوسیستم نرم‌افزاری توسعه‌دهنده (آقای اکبر علی‌میری - سیاوش)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CharcoalPrimary
+                    )
+                }
+
+                Text(
+                    text = "توسعه‌دهنده این برنامه تاجر باسابقه بازار بوده و اپلیکیشن‌ها با تکیه بر درک عمیق بازار و روانشناسی تجارت خلق شده‌اند:",
+                    fontSize = 11.sp,
+                    color = CharcoalSecondary,
+                    lineHeight = 17.sp
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(WarmBackground, RoundedCornerShape(10.dp))
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("• فرش‌بازار و فرش‌بازار لینک: «هر فرش‌فروش در سراسر جهان، یک غرفه» با پشتیبانی از ۱۷ زبان زنده دنیا", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• توانا استیت (Tavana Estate): اپلیکیشن جامع و تخصصی تهاتر ملک، زمین و ماشین", fontSize = 11.sp, color = CharcoalPrimary, fontWeight = FontWeight.SemiBold)
+                    Text("• ورد پلی (WorldPlay - نبرد اساطیر): نخستین شطرنج جهان با تم اساطیر، نبرد متحد و اتحاد تمدن‌ها", fontSize = 11.sp, color = CharcoalPrimary, fontWeight = FontWeight.SemiBold)
+                    Text("• اکوسیستم آفرینش (آفرینا) و شهر متاورسی جهان توانا سیتی (Afreena / Tavana City - آفرین نیو)", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• وی نکسوس (V-Nexus): خدمات هوش مصنوعی پیشرفته احساس‌محور", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• ساختمان‌یار: سامانه جامع مدیریت املاک، ساختمان‌ها و پروژه‌ها", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• خدمات‌یار: سامانه خدمات فنی ساختمانی (لوله، تاسیسات، برق و...)", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• توانا روتر و توانافرک: پلتفرم ساخت برنامه‌ها و فروشگاه‌های اینترنتی", fontSize = 11.sp, color = CharcoalPrimary)
+                    Text("• گیم‌های اینترنتی و ده‌ها برنامه کاربردی دیگر جهت سهولت کار برنامه‌نویسان، کدنویسان و اصناف", fontSize = 11.sp, color = SageGreen, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // ================================================================
+        // بخش نهایی: حق کپی‌رایت و مالکیت مادی و معنوی (Final Legal Copyright)
+        // ================================================================
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            color = Color(0xFF1E1C1A),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Copyright, contentDescription = null, tint = Color(0xFFFFD54F), modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "کلیه حقوق مادی و معنوی این برنامه متعلق است به آقای اکبر علیمیری توسعه دهنده",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD54F),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Text(
+                    text = "All Intellectual Property & Commercial Rights Reserved © Akbar AliMiri (Siavash)",
+                    fontSize = 9.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }

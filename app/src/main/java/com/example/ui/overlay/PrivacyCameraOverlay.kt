@@ -59,7 +59,32 @@ import com.example.ui.theme.TerracottaAccent
 import com.example.ui.theme.WarmBackground
 import com.example.ui.theme.WarmBorder
 import com.example.ui.theme.WarmSurface
+import androidx.compose.ui.graphics.asImageBitmap
 import kotlin.math.roundToInt
+
+private fun loadSafeImageBitmap(
+    context: android.content.Context,
+    @androidx.annotation.DrawableRes resId: Int,
+    targetWidth: Int = 512,
+    targetHeight: Int = 512
+): ImageBitmap? {
+    return try {
+        val drawable = androidx.core.content.ContextCompat.getDrawable(context, resId) ?: return null
+        if (drawable is android.graphics.drawable.BitmapDrawable && drawable.bitmap != null) {
+            drawable.bitmap.asImageBitmap()
+        } else {
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else targetWidth
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else targetHeight
+            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bitmap.asImageBitmap()
+        }
+    } catch (_: Throwable) {
+        null
+    }
+}
 
 @Composable
 fun PrivacyCameraOverlay(
@@ -82,25 +107,33 @@ fun PrivacyCameraOverlay(
     activeMaisonGarment: MaisonGarmentItem? = null,
     onTapAddManualZone: (Offset) -> Unit = {}
 ) {
-    // Load virtual background image if selected
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Load virtual background image if selected safely
     val activeEnv = remember(backgroundConfig.selectedEnvId) {
         BundledEnvironments.items.find { it.id == backgroundConfig.selectedEnvId }
             ?: BundledEnvironments.items.first()
     }
-    val virtualBgBitmap = ImageBitmap.imageResource(activeEnv.drawableResId)
+    val virtualBgBitmap = remember(activeEnv.drawableResId) {
+        loadSafeImageBitmap(context, activeEnv.drawableResId, 1080, 1920)
+    }
 
-    // Load Face Swap Avatar and Body Swap Mannequin
+    // Load Face Swap Avatar and Body Swap Mannequin safely (supports XML vectors and raster bitmaps without crashing)
     val activeAvatar = remember(swapConfig.selectedAvatarId) {
         BundledSwapItems.avatars.find { it.id == swapConfig.selectedAvatarId }
             ?: BundledSwapItems.avatars.first()
     }
-    val avatarBitmap = ImageBitmap.imageResource(activeAvatar.drawableResId)
+    val avatarBitmap = remember(activeAvatar.drawableResId) {
+        loadSafeImageBitmap(context, activeAvatar.drawableResId, 512, 512)
+    }
 
     val activeMannequin = remember(swapConfig.selectedBodyId) {
         BundledSwapItems.mannequins.find { it.id == swapConfig.selectedBodyId }
             ?: BundledSwapItems.mannequins.first()
     }
-    val mannequinBitmap = ImageBitmap.imageResource(activeMannequin.drawableResId)
+    val mannequinBitmap = remember(activeMannequin.drawableResId) {
+        loadSafeImageBitmap(context, activeMannequin.drawableResId, 512, 512)
+    }
 
     Box(
         modifier = modifier
@@ -132,7 +165,7 @@ fun PrivacyCameraOverlay(
             )
 
             // 2b. Render Body Swap Mannequin if enabled (فرم طاقچه‌ای گرد باسن و لیفت سینه)
-            if (swapConfig.bodySwapEnabled) {
+            if (swapConfig.bodySwapEnabled && mannequinBitmap != null) {
                 val bWidth = (canvasW * 0.72f * swapConfig.bodyScale).roundToInt()
                 val bHeight = (canvasH * 0.58f * swapConfig.bodyScale).roundToInt()
                 val bLeft = ((canvasW - bWidth) / 2f).roundToInt()
@@ -279,7 +312,7 @@ fun PrivacyCameraOverlay(
                 }
 
                 // 3c. Face Swap Avatar layer
-                if (swapConfig.faceSwapEnabled) {
+                if (swapConfig.faceSwapEnabled && avatarBitmap != null) {
                     val fLeft = faceRect.left.roundToInt()
                     val fTop = faceRect.top.roundToInt()
                     val fWidth = faceRect.width().roundToInt().coerceAtLeast(10)

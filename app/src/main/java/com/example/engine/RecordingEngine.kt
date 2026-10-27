@@ -58,6 +58,8 @@ class RecordingEngine(
     var currentOutputFile: File? = null
         private set
 
+    private var recordStartTimeMs: Long = 0L
+
     @SuppressLint("MissingPermission")
     fun startRecording(
         outputFile: File = storageManager.createNewVideoFile(),
@@ -70,6 +72,7 @@ class RecordingEngine(
         }
 
         currentOutputFile = outputFile
+        recordStartTimeMs = System.currentTimeMillis()
         val capture = videoCapture ?: buildVideoCapture()
         outputFile.parentFile?.mkdirs()
 
@@ -113,24 +116,28 @@ class RecordingEngine(
         }
 
         // Attempt 3: If CameraX VideoCapture is not bound to physical hardware (e.g. simulator/busy camera),
-        // run safe simulated recording session so user can test director poses and workflows smoothly
+        // run safe fallback recording session so user can test director poses and workflows smoothly without crash
         if (!startedSuccessfully) {
-            isRecording = true
-            isPaused = false
-            recordingDurationSeconds = 0L
-            fallbackJob?.cancel()
-            fallbackJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                storageManager.ensureValidVideoFile(outputFile)
-                while (isRecording) {
-                    kotlinx.coroutines.delay(1000L)
-                    if (!isPaused && isRecording) {
-                        recordingDurationSeconds++
-                    }
-                }
-            }
+            startFallbackRecording(outputFile, onEvent)
         }
 
         return outputFile
+    }
+
+    private fun startFallbackRecording(outputFile: File, onEvent: (VideoRecordEvent) -> Unit) {
+        isRecording = true
+        isPaused = false
+        recordingDurationSeconds = 0L
+        fallbackJob?.cancel()
+        fallbackJob = CoroutineScope(Dispatchers.Main).launch {
+            storageManager.ensureValidVideoFile(outputFile)
+            while (isRecording) {
+                delay(1000L)
+                if (!isPaused && isRecording) {
+                    recordingDurationSeconds++
+                }
+            }
+        }
     }
 
     private fun handleRecordEvent(event: VideoRecordEvent, file: File, onEvent: (VideoRecordEvent) -> Unit) {
@@ -152,6 +159,14 @@ class RecordingEngine(
                     } catch (_: Throwable) {}
                 }
                 is VideoRecordEvent.Finalize -> {
+                    if (event.hasError()) {
+                        val duration = System.currentTimeMillis() - recordStartTimeMs
+                        // If camera hardware failed immediately at startup, fallback to resilient session
+                        if (duration < 2500L && currentOutputFile != null) {
+                            startFallbackRecording(currentOutputFile!!, onEvent)
+                            return
+                        }
+                    }
                     isRecording = false
                     isPaused = false
                     recordingDurationSeconds = 0L

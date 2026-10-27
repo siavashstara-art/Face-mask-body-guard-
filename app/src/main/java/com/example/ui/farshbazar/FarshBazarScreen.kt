@@ -308,7 +308,10 @@ fun FarshBazarScreen(
                                 .padding(10.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text("• فرش‌بازار لینک (پلتفرم ارتباطی و شبکه اصناف فرش)", fontSize = 11.sp, color = CharcoalPrimary)
+                            Text("• فرش‌بازار و فرش‌بازار لینک: «هر فرش‌فروش در سراسر جهان، یک غرفه» با پشتیبانی از ۱۷ زبان زنده دنیا", fontSize = 11.sp, color = CharcoalPrimary)
+                            Text("• توانا استیت (Tavana Estate): اپلیکیشن جامع و تخصصی تهاتر ملک، زمین و ماشین", fontSize = 11.sp, color = CharcoalPrimary, fontWeight = FontWeight.SemiBold)
+                            Text("• ورد پلی (WorldPlay - نبرد اساطیر): نخستین شطرنج جهان با تم اساطیر، نبرد متحد و اتحاد تمدن‌ها", fontSize = 11.sp, color = CharcoalPrimary, fontWeight = FontWeight.SemiBold)
+                            Text("• اکوسیستم آفرینش (آفرینا) و شهر متاورسی جهان توانا سیتی (Afreena / Tavana City - آفرین نیو)", fontSize = 11.sp, color = CharcoalPrimary)
                             Text("• وی نکسوس (V-Nexus): خدمات هوش مصنوعی احساس‌محور", fontSize = 11.sp, color = CharcoalPrimary)
                             Text("• ساختمان‌یار: اپلیکیشن جامع مدیریت املاک و ساختمان‌ها", fontSize = 11.sp, color = CharcoalPrimary)
                             Text("• خدمات‌یار: معرفی خدمات فنی ساختمانی (لوله، تاسیسات، برق و...)", fontSize = 11.sp, color = CharcoalPrimary)
@@ -735,6 +738,44 @@ fun FarshBazarScreen(
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            item {
+                // ================================================================
+                // بخش نهایی: حق کپی‌رایت و مالکیت مادی و معنوی (Final Legal Copyright)
+                // ================================================================
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    color = Color(0xFF1E1C1A),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Copyright, contentDescription = null, tint = Color(0xFFFFD54F), modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "کلیه حقوق مادی و معنوی این برنامه متعلق است به آقای اکبر علیمیری توسعه دهنده",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFD54F),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        Text(
+                            text = "All Intellectual Property & Commercial Rights Reserved © Akbar AliMiri (Siavash)",
+                            fontSize = 9.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
