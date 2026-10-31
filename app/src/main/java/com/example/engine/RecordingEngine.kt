@@ -32,26 +32,34 @@ class RecordingEngine(
     private var videoCapture: VideoCapture<Recorder>? = null
 
     fun buildVideoCapture(preset: PerformancePreset = PerformancePreset.BALANCED): VideoCapture<Recorder> {
-        val targetQuality = when (preset) {
-            PerformancePreset.HIGH -> Quality.FHD
-            PerformancePreset.LOW_REDMI -> Quality.SD
-            else -> Quality.HD
+        return try {
+            val targetQuality = when (preset) {
+                PerformancePreset.HIGH -> Quality.HD
+                PerformancePreset.LOW_REDMI -> Quality.SD
+                else -> Quality.SD
+            }
+
+            val qualityList = listOf(targetQuality, Quality.SD, Quality.LOWEST).distinct()
+            val qualitySelector = QualitySelector.fromOrderedList(
+                qualityList,
+                FallbackStrategy.lowerQualityOrHigherThan(Quality.LOWEST)
+            )
+
+            val recorder = Recorder.Builder()
+                .setQualitySelector(qualitySelector)
+                .build()
+
+            val capture = VideoCapture.withOutput(recorder)
+            this.videoCapture = capture
+            capture
+        } catch (_: Throwable) {
+            val fallbackRecorder = Recorder.Builder()
+                .setQualitySelector(QualitySelector.from(Quality.LOWEST))
+                .build()
+            val capture = VideoCapture.withOutput(fallbackRecorder)
+            this.videoCapture = capture
+            capture
         }
-
-        // Ordered fallback list to ensure support across all hardware (Qualcomm, MediaTek, Exynos, Emulator)
-        val qualityList = listOf(targetQuality, Quality.HD, Quality.SD, Quality.LOWEST).distinct()
-        val qualitySelector = QualitySelector.fromOrderedList(
-            qualityList,
-            FallbackStrategy.lowerQualityOrHigherThan(Quality.LOWEST)
-        )
-
-        val recorder = Recorder.Builder()
-            .setQualitySelector(qualitySelector)
-            .build()
-
-        val capture = VideoCapture.withOutput(recorder)
-        this.videoCapture = capture
-        return capture
     }
 
     private var fallbackJob: kotlinx.coroutines.Job? = null
@@ -94,6 +102,8 @@ class RecordingEngine(
                 activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
                     handleRecordEvent(event, outputFile, onEvent)
                 }
+                isRecording = true
+                isPaused = false
                 startedSuccessfully = true
             } catch (_: Throwable) {
                 // If microphone is busy, locked by another app, or audio initialization fails,
@@ -109,6 +119,8 @@ class RecordingEngine(
                 activeRecording = pendingNoAudio.start(ContextCompat.getMainExecutor(context)) { event ->
                     handleRecordEvent(event, outputFile, onEvent)
                 }
+                isRecording = true
+                isPaused = false
                 startedSuccessfully = true
             } catch (_: Throwable) {
                 startedSuccessfully = false

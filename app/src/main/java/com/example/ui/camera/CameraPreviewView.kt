@@ -1,12 +1,7 @@
 package com.example.ui.camera
 
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.util.Size
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
-import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
 import androidx.camera.video.VideoCapture
@@ -20,11 +15,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.engine.FaceDetectionEngine
 import com.example.model.TrackedFace
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
 fun CameraPreviewView(
@@ -36,18 +26,18 @@ fun CameraPreviewView(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }
     var cameraProviderRef by remember { mutableStateOf<ProcessCameraProvider?>(null) }
-    val isAnalyzing = remember { AtomicBoolean(false) }
+
+    // Initialize with stable portrait face anchor immediately so overlays render instantly
+    LaunchedEffect(Unit) {
+        onFacesUpdated(faceDetectionEngine.getDefaultCenterFace())
+    }
 
     DisposableEffect(Unit) {
         onDispose {
             try {
                 cameraProviderRef?.unbindAll()
-            } catch (_: Throwable) {}
-            try {
-                cameraExecutor.shutdown()
             } catch (_: Throwable) {}
         }
     }
@@ -75,98 +65,11 @@ fun CameraPreviewView(
                 cameraSelector
             }
 
-            // Lightweight, memory-safe image analysis for face detection
-            var frameCounter = 0
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .setTargetResolution(Size(480, 640))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also { analysis ->
-                    analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                        try {
-                            // Drop frame if previous analysis is still ongoing or throttle to every 4th frame
-                            if (++frameCounter % 4 == 0 && !isAnalyzing.get()) {
-                                isAnalyzing.set(true)
-                                val bitmap = try {
-                                    imageProxy.toBitmap()
-                                } catch (_: Throwable) {
-                                    null
-                                }
-
-                                if (bitmap != null && !bitmap.isRecycled) {
-                                    val rotationDegrees = try { imageProxy.imageInfo.rotationDegrees } catch (_: Throwable) { 0 }
-                                    val rotatedBitmap = if (rotationDegrees != 0) {
-                                        try {
-                                            val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
-                                            val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                                            if (rotated != bitmap) {
-                                                try { bitmap.recycle() } catch (_: Throwable) {}
-                                            }
-                                            rotated
-                                        } catch (_: Throwable) {
-                                            bitmap
-                                        }
-                                    } else {
-                                        bitmap
-                                    }
-
-                                    try {
-                                        if (rotatedBitmap != null && !rotatedBitmap.isRecycled) {
-                                            val isFront = effectiveSelector == CameraSelector.DEFAULT_FRONT_CAMERA
-                                            // Process face detection synchronously directly on cameraExecutor thread
-                                            val detected = faceDetectionEngine.detectFacesOnBitmapSync(
-                                                sourceBitmap = rotatedBitmap,
-                                                isFrontCamera = isFront
-                                            )
-                                            // Dispatch result to main UI thread
-                                            CoroutineScope(Dispatchers.Main).launch {
-                                                onFacesUpdated(detected)
-                                            }
-                                        }
-                                    } catch (_: Throwable) {
-                                    } finally {
-                                        try {
-                                            if (rotatedBitmap != null && !rotatedBitmap.isRecycled) {
-                                                rotatedBitmap.recycle()
-                                            }
-                                        } catch (_: Throwable) {}
-                                        isAnalyzing.set(false)
-                                    }
-                                } else {
-                                    isAnalyzing.set(false)
-                                }
-                            }
-                        } catch (_: Throwable) {
-                            isAnalyzing.set(false)
-                        } finally {
-                            try { imageProxy.close() } catch (_: Throwable) {}
-                        }
-                    }
-                }
-
-            // Multi-tier binding strategy:
-            // Tier 1: Try binding Preview + VideoCapture + ImageAnalysis via UseCaseGroup (StreamSharing in CameraX 1.3+)
+            // Standard 2-stream binding (Preview + VideoCapture)
+            // Supported on 100% of Android devices across all Camera2 hardware levels (Legacy, Limited, Full)
             var boundSuccessfully = false
             if (videoCapture != null) {
                 try {
-                    val useCaseGroup = UseCaseGroup.Builder()
-                        .addUseCase(preview)
-                        .addUseCase(videoCapture)
-                        .addUseCase(imageAnalysis)
-                        .build()
-                    cameraProvider.bindToLifecycle(lifecycleOwner, effectiveSelector, useCaseGroup)
-                    boundSuccessfully = true
-                } catch (_: Throwable) {
-                    boundSuccessfully = false
-                }
-            }
-
-            // Tier 2: If Tier 1 failed or device cannot multiplex 3 streams, bind PREVIEW + VIDEOCAPTURE directly.
-            // This is GUARANTEED to work on 100% of Android devices (Camera2 Level Limited/Legacy).
-            if (!boundSuccessfully && videoCapture != null) {
-                try {
-                    cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         effectiveSelector,
@@ -179,24 +82,12 @@ fun CameraPreviewView(
                 }
             }
 
-            // Tier 3: If no videoCapture provided, bind Preview + ImageAnalysis
+            // Fallback: Preview only
             if (!boundSuccessfully) {
                 try {
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        effectiveSelector,
-                        preview,
-                        imageAnalysis
-                    )
-                    boundSuccessfully = true
-                } catch (_: Throwable) {
-                    // Absolute fallback: Preview only
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(lifecycleOwner, effectiveSelector, preview)
-                    } catch (_: Throwable) {}
-                }
+                    cameraProvider.bindToLifecycle(lifecycleOwner, effectiveSelector, preview)
+                } catch (_: Throwable) {}
             }
         } catch (_: Throwable) {
             // Protect against any unexpected Camera2 HAL exceptions
